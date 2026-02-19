@@ -1,0 +1,24 @@
+[
+  {
+    "id": "8cf7f47c-9636-41ca-aea9-e6c9e4660eb9",
+    "store_id": "3742f033-f1f2-40c8-9510-9394931cdb6a",
+    "make": "YAMAHA",
+    "model": "FZ250",
+    "year": 2026,
+    "price": "21900",
+    "images": [
+      "https://litzlvhlmaqcgszkwbdz.supabase.co/storage/v1/object/public/images/6ivgjeq35n7_1770924532733.jpg",
+      "https://litzlvhlmaqcgszkwbdz.supabase.co/storage/v1/object/public/images/m0ua7hy2s6o_1770924533438.jpeg",
+      "https://litzlvhlmaqcgszkwbdz.supabase.co/storage/v1/object/public/images/edge6oe0axr_1770924534382.jpeg"
+    ],
+    "status": "available",
+    "mileage": 0,
+    "color": "AZUL",
+    "slug": "yamaha-fz250-1770924536443",
+    "description": null,
+    "features": [],
+    "created_at": "2026-02-12T19:28:57.697Z",
+    "condition": "Seminova",
+    "has_warranty": false
+  }
+]
