@@ -75,14 +75,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [isEditMode, _setEditMode] = useState(false);
 
     // Persist edit mode in localStorage
-    const setEditMode = (mode: boolean) => {
+    const setEditMode = React.useCallback((mode: boolean) => {
         _setEditMode(mode);
         if (mode) {
             localStorage.setItem('jl_admin_session', 'true');
         } else {
             localStorage.removeItem('jl_admin_session');
         }
-    };
+    }, []);
 
     // Robust fetch by slug that can be triggered explicitly
     const setThemeBySlug = async (targetSlug: string) => {
@@ -163,14 +163,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         };
     }, [slug]);
 
-    const updateTheme = async (newTheme: Partial<Store>) => {
+    const updateTheme = React.useCallback(async (newTheme: Partial<Store>) => {
         setTheme((prev) => {
             const updated = { ...prev, ...newTheme };
             // Fire and forget to Supabase (or handle error if preferred)
             storeService.saveStore(theme.slug || 'default', newTheme).catch(console.error);
             return updated;
         });
-    };
+    }, [theme.slug]);
 
     const contextValue = useMemo(() => ({
         theme,
