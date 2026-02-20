@@ -21,18 +21,18 @@ export default function GestaoRootRedirect() {
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (session) {
-                    // Activate Edit Mode in Context and LocalStorage
-                    setEditMode(true);
+                    // Activate Edit Mode in LocalStorage immediately
+                    localStorage.setItem('jl_admin_session', 'true');
 
                     // Redirect directly to the storefront (teomotos)
-                    // Using the specific slug for this tenant with edit flag
-                    router.push('/teomotos?edit=true');
+                    // Using a hard redirect to break any React render cycles
+                    window.location.replace('/teomotos?edit=true');
                 } else {
-                    router.push('/auth');
+                    window.location.replace('/auth');
                 }
             } catch (error) {
                 console.error("Erro ao verificar sessão:", error);
-                router.push('/auth');
+                window.location.replace('/auth');
             } finally {
                 setIsLoading(false);
             }

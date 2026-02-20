@@ -85,7 +85,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     // Robust fetch by slug that can be triggered explicitly
-    const setThemeBySlug = async (targetSlug: string) => {
+    const setThemeBySlug = React.useCallback(async (targetSlug: string) => {
         if (!targetSlug || targetSlug === 'default' || targetSlug === theme.slug) return;
 
         try {
@@ -97,7 +97,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             if (error.name === 'AbortError') return;
             console.error("Erro ao sincronizar tema por slug:", error);
         }
-    };
+    }, [theme.slug]);
 
     // Load initial edit mode
     useEffect(() => {
