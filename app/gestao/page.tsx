@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
+import { supabase } from '@/lib/supabase';
 
 export default function GestaoRootRedirect() {
     const router = useRouter();
