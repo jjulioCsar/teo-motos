@@ -12,20 +12,30 @@ export default function GestaoRootRedirect() {
 
     useEffect(() => {
         const checkSession = async () => {
-            if (!supabase) return;
-            const { data: { session } } = await supabase.auth.getSession();
+            try {
+                if (!supabase) {
+                    console.error("Supabase not initialized");
+                    router.push('/auth');
+                    return;
+                }
+                const { data: { session } } = await supabase.auth.getSession();
 
-            if (session) {
-                // Activate Edit Mode in Context and LocalStorage
-                setEditMode(true);
+                if (session) {
+                    // Activate Edit Mode in Context and LocalStorage
+                    setEditMode(true);
 
-                // Redirect directly to the storefront (teomotos)
-                // Using the specific slug for this tenant
-                router.push('/teomotos');
-            } else {
+                    // Redirect directly to the storefront (teomotos)
+                    // Using the specific slug for this tenant with edit flag
+                    router.push('/teomotos?edit=true');
+                } else {
+                    router.push('/auth');
+                }
+            } catch (error) {
+                console.error("Erro ao verificar sessão:", error);
                 router.push('/auth');
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
 
         checkSession();
