@@ -115,7 +115,9 @@ export default function StorefrontLayout({
             </header>
             <main>{children}</main>
             <WhatsAppButton />
-            <LiveEditorOverlay />
+            <React.Suspense fallback={null}>
+                <LiveEditorOverlay />
+            </React.Suspense>
             <footer
                 className="border-t py-12 bg-zinc-950"
                 style={{ borderTopColor: theme.tertiaryColor ? `${theme.tertiaryColor}40` : 'rgba(255,255,255,0.1)' }}
