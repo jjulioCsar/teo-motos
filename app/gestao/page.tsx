@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { useStoreTheme } from '@/lib/context/ThemeContext';
 
 export default function GestaoRootRedirect() {
     const router = useRouter();
+    const { setEditMode } = useStoreTheme();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -14,12 +15,11 @@ export default function GestaoRootRedirect() {
             const { data: { session } } = await supabase.auth.getSession();
 
             if (session) {
-                // Enable Edit Mode via LocalStorage
-                localStorage.setItem('jl_admin_session', 'true');
+                // Activate Edit Mode in Context and LocalStorage
+                setEditMode(true);
 
-                // Get slug from session metadata or default to teomotos
-                // Ideally we'd fetch the store slug here, but for now we default to teomotos
-                // as per the single tenant structure.
+                // Redirect directly to the storefront (teomotos)
+                // Using the specific slug for this tenant
                 router.push('/teomotos');
             } else {
                 router.push('/auth');
@@ -28,7 +28,7 @@ export default function GestaoRootRedirect() {
         };
 
         checkSession();
-    }, [router]);
+    }, [router, setEditMode]);
 
     return (
         <div className="min-h-screen bg-black flex items-center justify-center text-white">
