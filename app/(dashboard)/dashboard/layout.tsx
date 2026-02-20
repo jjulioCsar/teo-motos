@@ -77,7 +77,7 @@ export default function DashboardLayout({
                     <div className="flex items-center gap-6">
                         {theme.slug && theme.slug !== 'default' && (
                             <Link
-                                href={`/${theme.slug}`}
+                                href={`/${theme.slug}?edit=true`}
                                 className="text-[10px] font-black uppercase tracking-widest px-4 py-2 bg-zinc-100 rounded-lg hover:bg-black hover:text-white transition-all flex items-center gap-2 text-zinc-600"
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

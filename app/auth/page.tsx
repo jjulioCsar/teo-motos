@@ -87,11 +87,10 @@ export default function AuthPage() {
 
                     // Redirect to the store-specific management route
                     // STRICT SINGLE TENANT: Always go to teomotos
-                    router.push(`/teomotos/gestao`);
+                    // Redirect to the site with edit flag
+                    router.push(`/teomotos?edit=true`);
                 } else {
-                    // If no store found, usually we'd go to onboarding. 
-                    // But for single tenant, maybe we just show an error or force teomotos if they are the owner.
-                    // For now, let's keep it safe:
+                    // ... (no changes to else)
                     console.error("Store not found for this user");
                     addToast('Loja não encontrada para este usuário.', 'error');
                 }
@@ -116,8 +115,8 @@ export default function AuthPage() {
                     if (userEmail) {
                         const { error: rpcError } = await supabase.rpc('claim_store_by_email');
 
-                        // Just redirect to login or dashboard
-                        router.push(`/teomotos/gestao`);
+                        // Just redirect to site with edit flag
+                        router.push(`/teomotos?edit=true`);
                     }
                 } else {
                     // Email confirmation case (if enabled)

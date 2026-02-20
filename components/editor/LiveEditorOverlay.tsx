@@ -31,7 +31,8 @@ import {
 import { useToast } from '@/lib/context/ToastContext';
 import ImageCropperModal from '../ImageCropperModal';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 
 export default function LiveEditorOverlay() {
     const params = useParams();
@@ -43,7 +44,21 @@ export default function LiveEditorOverlay() {
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'design' | 'content' | 'inventory' | 'config'>('design');
     const [inventory, setInventory] = useState<Motorcycle[]>([]);
+    const searchParams = useSearchParams();
+    const router = useRouter();
     const [isAddingMoto, setIsAddingMoto] = useState(false);
+
+    // Auto-open editor if ?edit=true is present
+    useEffect(() => {
+        if (searchParams?.get('edit') === 'true' && isEditMode) {
+            setIsOpen(true);
+            // Clean up the URL after opening
+            const newParams = new URLSearchParams(searchParams.toString());
+            newParams.delete('edit');
+            const cleanUrl = `${window.location.pathname}${newParams.toString() ? '?' + newParams.toString() : ''}`;
+            window.history.replaceState({}, '', cleanUrl);
+        }
+    }, [searchParams, isEditMode]);
 
     // Cropper State
     const [cropFile, setCropFile] = useState<File | null>(null);
@@ -189,9 +204,22 @@ export default function LiveEditorOverlay() {
                                 <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">Live Editor</h2>
                                 <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Loja de Motos <span className="text-white">{theme.slug}</span></p>
                             </div>
-                            <button onClick={() => setIsOpen(false)} className="md:hidden p-2 text-white bg-white/10 rounded-full">
-                                <X className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => {
+                                        setEditMode(false);
+                                        setIsOpen(false);
+                                    }}
+                                    className="p-2 text-red-400 hover:bg-red-500/10 rounded-xl transition-all flex items-center gap-1 group"
+                                    title="Sair do Modo Gestão"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                    <span className="text-[10px] font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity">Sair</span>
+                                </button>
+                                <button onClick={() => setIsOpen(false)} className="md:hidden p-2 text-white bg-white/10 rounded-full">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
 
                         {/* Tabs */}

@@ -8,9 +8,8 @@ export default function GestaoRedirect() {
     const { slug } = useParams();
 
     useEffect(() => {
-        // Redirect to the dashboard which manages this slug or the global dashboard
-        // For now, redirecting to the root dashboard
-        router.push('/dashboard');
+        // Redirect to the storefront with the edit flag enabled
+        router.push(`/${slug}?edit=true`);
     }, [router, slug]);
 
     return (

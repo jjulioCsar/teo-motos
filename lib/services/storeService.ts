@@ -502,7 +502,7 @@ export const inventoryService = {
         return {
             inventoryCount: invCount.count || 0,
             leadsCount: leadCount.count || 0,
-            views: 4230, // Keep simulated or fetch if analytics exist
+            views: 0, // Resetting simulated data to real zero
             conversions: leadCount.count ? Math.floor((leadCount.count / 100) * 100) : 0
         };
     }
