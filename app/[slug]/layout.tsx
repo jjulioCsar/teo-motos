@@ -34,6 +34,29 @@ export default function StorefrontLayout({
         }
     }, [params?.slug, setThemeBySlug]);
 
+    // Dynamic favicon from store logo
+    React.useEffect(() => {
+        if (theme.logo) {
+            let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+            link.href = theme.logo;
+            link.type = 'image/png';
+
+            // Also set apple-touch-icon for mobile bookmarks
+            let appleLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+            if (!appleLink) {
+                appleLink = document.createElement('link');
+                appleLink.rel = 'apple-touch-icon';
+                document.head.appendChild(appleLink);
+            }
+            appleLink.href = theme.logo;
+        }
+    }, [theme.logo]);
+
     const navLinks = [
         { label: 'Estoque', href: `/${slug}/estoque` },
         { label: 'Financiamento', href: `/${slug}/financiamento` },
