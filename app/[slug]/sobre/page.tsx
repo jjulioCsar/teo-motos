@@ -16,6 +16,7 @@ export default function AboutPage() {
                     <img
                         src={theme.aboutImage || "https://images.unsplash.com/photo-1558981453-22fab9ec0309?q=80&w=2070"}
                         className="w-full h-full object-cover grayscale opacity-40"
+                        loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
                 </div>

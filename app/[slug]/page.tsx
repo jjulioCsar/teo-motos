@@ -161,6 +161,7 @@ export default function StorePage() {
                                     src={moto.image || `https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=2070`}
                                     alt={moto.model}
                                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                                    loading="lazy"
                                 />
                                 <div className="absolute bottom-0 left-0 p-10 z-20 w-full group-hover:pb-12 transition-all duration-500">
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
@@ -208,6 +209,7 @@ export default function StorePage() {
                         <img
                             src={theme.aboutImage || "https://images.unsplash.com/photo-1558981453-22fab9ec0309?q=80&w=2070"}
                             className="w-full h-full object-cover grayscale opacity-50"
+                            loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-r from-black to-transparent" />
                     </div>
@@ -218,10 +220,22 @@ export default function StorePage() {
                         <p className="text-white/60 font-medium leading-relaxed">
                             {theme.aboutTeaserText || `Na curadoria da nossa loja selecionamos apenas máquinas impecáveis para garantir que sua única preocupação seja o destino.`}
                         </p>
-                        <div className="p-8 bg-zinc-900/50 rounded-[2.5rem] border border-white/5 space-y-2">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Onde estamos</p>
-                            <p className="text-lg font-bold">{theme.address || 'Venha nos visitar em Maceió, AL'}</p>
-                        </div>
+                        <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(theme.address || theme.name)}`}
+                            target="_blank"
+                            className="flex items-center gap-4 p-6 bg-zinc-900/50 rounded-[2rem] border border-white/5 hover:border-white/20 transition-all group"
+                        >
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Onde estamos</p>
+                                <p className="text-sm font-bold truncate">{theme.address || 'Venha nos visitar em Maceió, AL'}</p>
+                            </div>
+                            <span className="px-4 py-2 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest shrink-0 group-hover:scale-105 transition-transform">
+                                Ver no Maps
+                            </span>
+                        </a>
                     </div>
                 </div>
             </section>
