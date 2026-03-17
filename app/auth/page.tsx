@@ -44,56 +44,21 @@ export default function AuthPage() {
                 }
 
                 const userId = data.user.id;
-                const userEmail = data.user.email;
 
-                // 1. Tentar encontrar loja pelo ID do dono (Link correto)
-                let { data: store, error: fetchError } = await supabase
+                // Tentar encontrar loja pelo ID do dono
+                const { data: store } = await supabase
                     .from('stores')
                     .select('slug')
                     .eq('owner_id', userId)
                     .maybeSingle();
 
-                if (fetchError) {
-                    console.error("Erro ao buscar loja por ID:", fetchError.message);
-                }
+                // Activate admin session
+                localStorage.setItem('jl_admin_session', 'true');
 
-                // 2. Se não achar pelo ID, tentar pelo Email (Recuperação de conexão)
-                if (!store && userEmail) {
-                    console.log("Loja não encontrada pelo ID. Tentando vincular pelo email:", userEmail);
-
-                    // NEW: Use Secure RPC to bypass RLS and link store
-                    const { error: rpcError } = await supabase.rpc('claim_store_by_email');
-
-                    if (!rpcError) {
-                        console.log("Loja vinculada com sucesso via RPC!");
-                        // Fetch the store again to confirm and get data
-                        const { data: storeRefetched } = await supabase
-                            .from('stores')
-                            .select('slug')
-                            .eq('owner_id', userId)
-                            .single();
-
-                        if (storeRefetched) {
-                            store = storeRefetched;
-                        }
-                    } else {
-                        console.error("Erro ao vincular loja via RPC:", rpcError.message || rpcError);
-                    }
-                }
-
-                if (store) {
-                    // Activate admin session for the local context
-                    localStorage.setItem('jl_admin_session', 'true');
-
-                    // Redirect to the store-specific management route
-                    // STRICT SINGLE TENANT: Always go to teomotos
-                    // Redirect to the site with edit flag
-                    router.push(`/teomotos?edit=true`);
-                } else {
-                    // ... (no changes to else)
-                    console.error("Store not found for this user");
-                    addToast('Loja não encontrada para este usuário.', 'error');
-                }
+                // Use window.location for full page reload (refreshes server cookies for middleware)
+                const targetSlug = store?.slug || 'teomotos';
+                window.location.href = `/${targetSlug}?edit=true`;
+                return; // Stop execution — page is navigating
             } else {
                 const { data, error } = await supabase.auth.signUp({
                     email,
@@ -108,18 +73,10 @@ export default function AuthPage() {
                 if (error) throw error;
 
                 if (data.session) {
-                    // Check logic for auto-linking on signup as well
-                    const userId = data.session.user.id;
-                    const userEmail = data.session.user.email;
-
-                    if (userEmail) {
-                        const { error: rpcError } = await supabase.rpc('claim_store_by_email');
-
-                        // Just redirect to site with edit flag
-                        router.push(`/teomotos?edit=true`);
-                    }
+                    localStorage.setItem('jl_admin_session', 'true');
+                    window.location.href = `/teomotos?edit=true`;
+                    return;
                 } else {
-                    // Email confirmation case (if enabled)
                     addToast('Verifique seu email para confirmar o cadastro!', 'info');
                     setMode('signin');
                 }

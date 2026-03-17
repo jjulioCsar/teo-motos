@@ -48,13 +48,6 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
-    // If user is logged in and visits /auth, redirect to dashboard
-    if (request.nextUrl.pathname === '/auth' && user) {
-        const url = request.nextUrl.clone();
-        url.pathname = '/gestao';
-        return NextResponse.redirect(url);
-    }
-
     return supabaseResponse;
 }
 
