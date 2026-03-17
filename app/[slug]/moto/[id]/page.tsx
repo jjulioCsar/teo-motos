@@ -33,15 +33,11 @@ export default function MotorcycleDetailsPage() {
         async function loadMoto() {
             if (!id) return;
             try {
-                const idStr = id as string;
-                // Try slug first (SEO-friendly URLs), fall back to UUID
-                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}/.test(idStr);
-                let data;
-                if (isUUID) {
+                const idStr = decodeURIComponent(id as string);
+                // Always try slug first, then fall back to UUID
+                let data = await inventoryService.getMotorcycleBySlug(idStr);
+                if (!data) {
                     data = await inventoryService.getMotorcycleById(idStr);
-                } else {
-                    data = await inventoryService.getMotorcycleBySlug(idStr);
-                    if (!data) data = await inventoryService.getMotorcycleById(idStr);
                 }
                 setMoto(data);
             } catch (error) {
@@ -255,33 +251,43 @@ export default function MotorcycleDetailsPage() {
                                 </ul>
                             </div>
                         )}
+                    </div>
 
-                        <div className="bg-zinc-900 border border-white/5 rounded-3xl p-8 space-y-6">
-                            <h3 className="text-xl font-bold uppercase italic">Localização</h3>
+                    {/* Full-width map section */}
+                    <div className="bg-zinc-900 border border-white/5 rounded-3xl p-6 md:p-8 space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
-                                <p className="text-sm font-bold">{theme.name}</p>
+                                <h3 className="text-xl font-bold uppercase italic">Localização</h3>
+                                <p className="text-sm font-bold mt-1">{theme.name}</p>
                                 <p className="text-sm text-white/40">{theme.address || 'Venha nos visitar'}</p>
                             </div>
-                            {theme.mapUrl ? (
-                                <div className="h-40 rounded-2xl overflow-hidden border border-white/10">
-                                    <iframe
-                                        src={theme.mapUrl}
-                                        className="w-full h-full border-0"
-                                        allowFullScreen
-                                        loading="lazy"
-                                        referrerPolicy="no-referrer-when-downgrade"
-                                    />
-                                </div>
-                            ) : (
-                                <a
-                                    href={`https://www.google.com/maps/search/${encodeURIComponent(theme.address || theme.name)}`}
-                                    target="_blank"
-                                    className="h-40 bg-zinc-800 rounded-2xl flex items-center justify-center text-xs text-white/40 uppercase font-black italic tracking-widest text-center px-4 hover:bg-zinc-700 transition-colors"
-                                >
-                                    Ver no Google Maps →
-                                </a>
-                            )}
+                            <a
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(theme.address || theme.name)}`}
+                                target="_blank"
+                                className="px-5 py-3 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform shrink-0 text-center"
+                            >
+                                Abrir no Maps
+                            </a>
                         </div>
+                        {theme.mapUrl ? (
+                            <div className="h-64 md:h-80 rounded-2xl overflow-hidden border border-white/10">
+                                <iframe
+                                    src={theme.mapUrl}
+                                    className="w-full h-full border-0"
+                                    allowFullScreen
+                                    loading="lazy"
+                                    referrerPolicy="no-referrer-when-downgrade"
+                                />
+                            </div>
+                        ) : (
+                            <a
+                                href={`https://www.google.com/maps/search/${encodeURIComponent(theme.address || theme.name)}`}
+                                target="_blank"
+                                className="h-48 bg-zinc-800 rounded-2xl flex items-center justify-center text-xs text-white/40 uppercase font-black italic tracking-widest text-center px-4 hover:bg-zinc-700 transition-colors"
+                            >
+                                Ver no Google Maps →
+                            </a>
+                        )}
                     </div>
                 </div>
             </div>
