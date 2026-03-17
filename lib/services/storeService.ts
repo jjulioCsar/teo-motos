@@ -65,6 +65,7 @@ export interface Store {
 
 export interface Motorcycle {
     id: string;
+    slug?: string;
     make: string;
     model: string;
     year: string;
@@ -80,6 +81,16 @@ export interface Motorcycle {
     condition?: 'Nova' | 'Seminova' | 'Repasse';
     hasWarranty?: boolean;
     is_featured?: boolean;
+}
+
+// Generate SEO-friendly slug from moto data
+function generateMotoSlug(make: string, model: string, year: string): string {
+    const base = `${make}-${model}-${year}`
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    return base;
 }
 
 // Helper to map DB to Frontend
@@ -360,6 +371,7 @@ export const inventoryService = {
 
         return data.map(m => ({
             id: m.id,
+            slug: m.slug || '',
             make: m.make,
             model: m.model,
             year: m.year,
@@ -369,11 +381,12 @@ export const inventoryService = {
             status: m.status,
             km: m.mileage?.toString(),
             color: m.color,
-            fuelType: m.condition === 'New' ? 'Flex' : 'Gasolina', // Legacy fallback or update logic
+            fuelType: m.condition === 'New' ? 'Flex' : 'Gasolina',
             description: m.description,
             features: m.features,
             condition: m.condition || 'Seminova',
-            hasWarranty: m.has_warranty ?? false
+            hasWarranty: m.has_warranty ?? false,
+            is_featured: m.is_featured ?? false
         }));
     },
 
@@ -390,6 +403,7 @@ export const inventoryService = {
 
         return {
             id: data.id,
+            slug: data.slug || '',
             make: data.make,
             model: data.model,
             year: data.year,
@@ -403,7 +417,40 @@ export const inventoryService = {
             description: data.description,
             features: data.features,
             condition: data.condition || 'Seminova',
-            hasWarranty: data.has_warranty ?? false
+            hasWarranty: data.has_warranty ?? false,
+            is_featured: data.is_featured ?? false
+        };
+    },
+
+    getMotorcycleBySlug: async (motoSlug: string): Promise<Motorcycle | null> => {
+        if (!supabase) return null;
+
+        const { data, error } = await supabase
+            .from('motorcycles')
+            .select('*')
+            .eq('slug', motoSlug)
+            .single();
+
+        if (error || !data) return null;
+
+        return {
+            id: data.id,
+            slug: data.slug || '',
+            make: data.make,
+            model: data.model,
+            year: data.year,
+            price: data.price.toString(),
+            image: data.images?.[0] || '',
+            images: data.images || [],
+            status: data.status,
+            km: data.mileage?.toString(),
+            color: data.color,
+            fuelType: data.condition === 'New' ? 'Flex' : 'Gasolina',
+            description: data.description,
+            features: data.features,
+            condition: data.condition || 'Seminova',
+            hasWarranty: data.has_warranty ?? false,
+            is_featured: data.is_featured ?? false
         };
     },
 
@@ -438,7 +485,8 @@ export const inventoryService = {
                     images: moto.images.length > 0 ? moto.images : [moto.image],
                     condition: moto.condition,
                     has_warranty: moto.hasWarranty,
-                    slug: `${moto.make}-${moto.model}-${Date.now()}`.toLowerCase()
+                    slug: generateMotoSlug(moto.make, moto.model, moto.year),
+                    is_featured: moto.is_featured ?? false
                 });
 
             if (error) {
@@ -468,6 +516,10 @@ export const inventoryService = {
             if (moto.images) updates.images = moto.images;
             if (moto.condition) updates.condition = moto.condition;
             if (moto.hasWarranty !== undefined) updates.has_warranty = moto.hasWarranty;
+            if (moto.is_featured !== undefined) updates.is_featured = moto.is_featured;
+            if (moto.make && moto.model && moto.year) {
+                updates.slug = generateMotoSlug(moto.make, moto.model, moto.year);
+            }
 
             const { error } = await supabase
                 .from('motorcycles')

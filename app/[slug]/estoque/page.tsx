@@ -92,7 +92,7 @@ export default function InventoryPage() {
 
     const MotoCard = ({ moto, compact = false }: { moto: any; compact?: boolean }) => (
         <Link
-            href={`/${slug}/moto/${moto.id}`}
+            href={`/${slug}/moto/${moto.slug || moto.id}`}
             className={`group relative rounded-2xl md:rounded-[2.5rem] overflow-hidden bg-zinc-900 border border-white/5 hover:border-white/20 transition-all cursor-pointer shadow-2xl block ${compact ? 'flex-shrink-0 w-[280px] snap-start' : ''}`}
         >
             <div className={`relative ${compact ? 'aspect-[4/3]' : 'aspect-[4/3]'} overflow-hidden`}>

@@ -1,12 +1,21 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
+import { inventoryService } from '@/lib/services/storeService';
+import { useParams } from 'next/navigation';
 import { Landmark, Calculator, Receipt, Clock, CheckCircle2, Send, User, FileText, Phone, Bike, DollarSign, Loader2 } from 'lucide-react';
 
 export default function FinancingPage() {
     const { theme } = useStoreTheme();
+    const { slug } = useParams();
+    const [motos, setMotos] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (!slug) return;
+        inventoryService.getInventory(slug as string).then(setMotos);
+    }, [slug]);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -40,11 +49,16 @@ export default function FinancingPage() {
         e.preventDefault();
         setSending(true);
 
+        const selectedMoto = motos.find(m => m.id === formData.motoInteresse);
+        const motoName = selectedMoto ? `${selectedMoto.make} ${selectedMoto.model} (${selectedMoto.year})` : 'Não especificou';
+        const motoLink = selectedMoto ? `${typeof window !== 'undefined' ? window.location.origin : ''}/${slug}/moto/${selectedMoto.slug || selectedMoto.id}` : '';
+
         const message = `*SIMULAÇÃO DE FINANCIAMENTO*\n\n` +
             `👤 *Nome:* ${formData.name}\n` +
             `📄 *CPF:* ${formData.cpf}\n` +
             `📱 *Telefone:* ${formData.phone}\n\n` +
-            `🏍️ *Moto de Interesse:* ${formData.motoInteresse || 'Não especificou'}\n` +
+            `🏍️ *Moto de Interesse:* ${motoName}\n` +
+            (motoLink ? `🔗 ${motoLink}\n` : '') +
             `💵 *Entrada Disponível:* R$ ${formData.entrada || '0'}\n` +
             `📅 *Parcelas Desejadas:* ${formData.parcelas}x\n` +
             `💰 *Renda Mensal:* R$ ${formData.renda || 'Não informado'}\n\n` +
@@ -232,12 +246,18 @@ export default function FinancingPage() {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Moto de Interesse</label>
                                     <div className="relative">
                                         <Bike className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
-                                        <input
+                                        <select
                                             value={formData.motoInteresse}
                                             onChange={e => setFormData(p => ({ ...p, motoInteresse: e.target.value }))}
-                                            placeholder="Ex: Honda CG 160, Yamaha FZ25..."
-                                            className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-indigo-500 transition-colors"
-                                        />
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-indigo-500 transition-colors appearance-none"
+                                        >
+                                            <option value="">Selecione uma moto...</option>
+                                            {motos.map(m => (
+                                                <option key={m.id} value={m.id} className="bg-zinc-900 text-white">
+                                                    {m.make} {m.model} ({m.year}) - R$ {new Intl.NumberFormat('pt-BR').format(Number(String(m.price).replace(/\D/g, '')))}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
 

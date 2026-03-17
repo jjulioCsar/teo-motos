@@ -33,7 +33,16 @@ export default function MotorcycleDetailsPage() {
         async function loadMoto() {
             if (!id) return;
             try {
-                const data = await inventoryService.getMotorcycleById(id as string);
+                const idStr = id as string;
+                // Try slug first (SEO-friendly URLs), fall back to UUID
+                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}/.test(idStr);
+                let data;
+                if (isUUID) {
+                    data = await inventoryService.getMotorcycleById(idStr);
+                } else {
+                    data = await inventoryService.getMotorcycleBySlug(idStr);
+                    if (!data) data = await inventoryService.getMotorcycleById(idStr);
+                }
                 setMoto(data);
             } catch (error) {
                 console.error("Error loading motorcycle:", error);
@@ -197,7 +206,7 @@ export default function MotorcycleDetailsPage() {
 
                         <div className="space-y-3">
                             <a
-                                href={`https://wa.me/${theme.whatsappNumber?.replace(/\D/g, '')}?text=Olá,%20tenho%20interesse%20na%20${moto.make}%20${moto.model}%20anunciada%20no%20site.`}
+                                href={`https://wa.me/${theme.whatsappNumber?.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá, tenho interesse na ${moto.make} ${moto.model} anunciada no site.\n\n🔗 ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
                                 target="_blank"
                                 className="w-full bg-white text-black py-4 rounded-2xl font-black text-center text-lg hover:scale-[1.02] transition-transform block"
                             >

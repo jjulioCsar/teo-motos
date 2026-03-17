@@ -1105,7 +1105,16 @@ export default function LiveEditorOverlay() {
 
                                                     <button
                                                         type="button"
-                                                        onClick={() => setNewMoto({ ...newMoto, is_featured: !newMoto.is_featured })}
+                                                        onClick={() => {
+                                                            if (!newMoto.is_featured) {
+                                                                const currentFeaturedCount = inventory.filter(m => m.is_featured && m.id !== editingId).length;
+                                                                if (currentFeaturedCount >= 3) {
+                                                                    addToast('Máximo de 3 motos em destaque. Remova um destaque antes.', 'warning');
+                                                                    return;
+                                                                }
+                                                            }
+                                                            setNewMoto({ ...newMoto, is_featured: !newMoto.is_featured });
+                                                        }}
                                                         className={`p-1 rounded-2xl border transition-all flex items-center gap-2 group ${newMoto.is_featured ? 'bg-amber-500/10 border-amber-500/30' : 'bg-white/5 border-white/5'}`}
                                                     >
                                                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${newMoto.is_featured ? 'bg-amber-500 text-black' : 'bg-zinc-900 text-zinc-700'}`}>
@@ -1148,17 +1157,30 @@ export default function LiveEditorOverlay() {
                                                 ))}
 
                                                 {/* Add Button */}
-                                                {(newMoto.images?.length || 0) < 8 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => document.getElementById('moto-gallery-upload')?.click()}
-                                                        className="aspect-square rounded-xl bg-white/5 border-2 border-dashed border-white/10 flex items-center justify-center hover:border-indigo-500/50 transition-all"
-                                                    >
-                                                        <Plus className="w-5 h-5 text-white/20" />
-                                                    </button>
+                                            {(newMoto.images?.length || 0) < 8 && (
+                                                    <div className="flex flex-col gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => document.getElementById('moto-gallery-upload')?.click()}
+                                                            className="aspect-square rounded-xl bg-white/5 border-2 border-dashed border-white/10 flex flex-col items-center justify-center hover:border-indigo-500/50 transition-all gap-1"
+                                                        >
+                                                            <Plus className="w-5 h-5 text-white/20" />
+                                                            <span className="text-[7px] font-black uppercase tracking-widest text-white/20">Galeria</span>
+                                                        </button>
+                                                        {/* Camera button - shows natively on mobile */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => document.getElementById('moto-camera-upload')?.click()}
+                                                            className="py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center gap-1 hover:bg-indigo-500/20 transition-all"
+                                                        >
+                                                            <ImageIcon className="w-3 h-3 text-indigo-400" />
+                                                            <span className="text-[7px] font-black uppercase tracking-widest text-indigo-400">Câmera</span>
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
 
+                                            {/* Gallery file input */}
                                             <input
                                                 id="moto-gallery-upload"
                                                 type="file"
@@ -1182,6 +1204,34 @@ export default function LiveEditorOverlay() {
                                                             }
                                                         } catch (err) {
                                                             console.error('Upload failed for file:', file.name, err);
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                            {/* Camera file input (capture=environment opens camera on mobile) */}
+                                            <input
+                                                id="moto-camera-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                className="hidden"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        try {
+                                                            const url = await storeService.uploadImage(file);
+                                                            if (url) {
+                                                                setNewMoto(prev => {
+                                                                    const newImages = [...(prev.images || []), url];
+                                                                    return {
+                                                                        ...prev,
+                                                                        images: newImages,
+                                                                        image: prev.image || newImages[0]
+                                                                    };
+                                                                });
+                                                            }
+                                                        } catch (err) {
+                                                            console.error('Camera upload failed:', err);
                                                         }
                                                     }
                                                 }}

@@ -21,13 +21,17 @@ export default function StorePage() {
         if (!slug) return;
         async function loadFeatured() {
             const data = await inventoryService.getInventory(slug as string);
-            setFeatured(data.slice(0, 3));
+            // Show featured motos first (up to 3), fill remaining with recent motos
+            const featuredMotos = data.filter((m: any) => m.is_featured);
+            const nonFeatured = data.filter((m: any) => !m.is_featured);
+            const result = [...featuredMotos, ...nonFeatured].slice(0, 3);
+            setFeatured(result);
         }
         loadFeatured();
     }, [slug]);
 
     const handleMotoClick = (moto: any) => {
-        router.push(`/${slug}/moto/${moto.id}`);
+        router.push(`/${slug}/moto/${moto.slug || moto.id}`);
     };
 
     return (

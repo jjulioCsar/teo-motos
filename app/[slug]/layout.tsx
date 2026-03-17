@@ -45,7 +45,7 @@ export default function StorefrontLayout({
         <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-primary-foreground">
             {/* Navbar */}
             <header
-                className="sticky top-0 z-50 w-full border-b bg-black/50 backdrop-blur-xl"
+                className="sticky top-0 z-50 w-full border-b bg-black backdrop-blur-xl"
                 style={{ borderBottomColor: theme.tertiaryColor ? `${theme.tertiaryColor}20` : 'rgba(255,255,255,0.1)' }}
             >
                 <div className="container flex h-16 items-center justify-between px-4 mx-auto">

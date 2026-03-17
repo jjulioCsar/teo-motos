@@ -89,6 +89,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                 `👤 *Cliente:* ${name}\n` +
                 `📄 *CPF:* ${cpf}\n` +
                 `📱 *Tel:* ${phone}\n\n` +
+                `🔗 ${typeof window !== 'undefined' ? window.location.href : ''}\n\n` +
                 `_Gostaria de verificar a aprovação para esta condição._`;
 
             const cleanPhone = whatsappNumber?.replace(/\D/g, '');
