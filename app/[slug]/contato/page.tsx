@@ -119,7 +119,7 @@ export default function ContactPage() {
                             </div>
                             <div className="space-y-2 md:space-y-3">
                                 <div className="flex justify-between items-center py-2 md:py-3 border-b border-white/5">
-                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">Segunda à Sexta</span>
+                                    <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-zinc-500">Segunda a Sexta</span>
                                     <span className="font-bold text-sm md:text-base">{theme.hoursWeekdays || "08:00 - 18:00"}</span>
                                 </div>
                                 <div className="flex justify-between items-center py-2 md:py-3 border-b border-white/5">

@@ -17,6 +17,7 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import { storeService, inventoryService } from '@/lib/services/storeService';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
+import { useToast } from '@/lib/context/ToastContext';
 import Image from 'next/image';
 import FinancingModal from '@/components/FinancingModal';
 
@@ -24,6 +25,7 @@ export default function MotorcycleDetailsPage() {
     const { slug, id } = useParams();
     const router = useRouter();
     const { theme } = useStoreTheme();
+    const { addToast } = useToast();
     const [activeImage, setActiveImage] = useState(0);
     const [moto, setMoto] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -155,7 +157,7 @@ export default function MotorcycleDetailsPage() {
                                                 await navigator.share(shareData);
                                             } else {
                                                 await navigator.clipboard.writeText(window.location.href);
-                                                alert('Link copiado!');
+                                                addToast('Link copiado com sucesso!', 'success');
                                             }
                                         } catch {}
                                     }}

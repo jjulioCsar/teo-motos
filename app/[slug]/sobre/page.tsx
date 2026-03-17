@@ -71,7 +71,7 @@ export default function AboutPage() {
                                         A {theme.name} nasceu do desejo de conectar motociclistas às máquinas dos seus sonhos. Entendemos que cada moto carrega uma história e uma promessa de liberdade.
                                     </p>
                                     <p>
-                                        Ao longo dos anos, nos tornamos referência em Maceió pela qualidade do nosso estoque e pela transparência em cada negociação. Cada veículo que entra em nosso showroom passa por uma curadoria rigorosa.
+                                        Ao longo dos anos, nos tornamos referência na região pela qualidade do nosso estoque e pela transparência em cada negociação. Cada veículo que entra em nosso showroom passa por uma curadoria rigorosa.
                                     </p>
                                 </>
                             )}

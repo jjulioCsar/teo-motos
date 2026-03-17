@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
 import { inventoryService } from '@/lib/services/storeService';
-import { PackageOpen, ArrowRight } from 'lucide-react';
+import { PackageOpen, ArrowRight, ShieldCheck, Landmark, Truck } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -108,9 +108,9 @@ export default function StorePage() {
             <section className="py-12 md:py-24 bg-zinc-900/50">
                 <div className="container px-6 md:px-8 mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
                     {[
-                        { title: theme.feature1Title || 'Qualidade Garantida', desc: theme.feature1Desc || 'Todas as nossas motos passam por uma rigorosa vistoria técnica.' },
-                        { title: theme.feature2Title || 'Financiamento Fácil', desc: theme.feature2Desc || 'As melhores taxas do mercado com aprovação rápida e sem burocracia.' },
-                        { title: theme.feature3Title || 'Entrega Segura', desc: theme.feature3Desc || 'Receba sua nova conquista no conforto da sua casa com total segurança.' },
+                        { title: theme.feature1Title || 'Qualidade Garantida', desc: theme.feature1Desc || 'Todas as nossas motos passam por uma rigorosa vistoria técnica.', icon: <ShieldCheck className="w-6 h-6" /> },
+                        { title: theme.feature2Title || 'Financiamento Fácil', desc: theme.feature2Desc || 'As melhores taxas do mercado com aprovação rápida e sem burocracia.', icon: <Landmark className="w-6 h-6" /> },
+                        { title: theme.feature3Title || 'Entrega Segura', desc: theme.feature3Desc || 'Receba sua nova conquista no conforto da sua casa com total segurança.', icon: <Truck className="w-6 h-6" /> },
                     ].map((feature, i) => (
                         <motion.div
                             key={i}
@@ -119,8 +119,8 @@ export default function StorePage() {
                             className="space-y-4"
                         >
                             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white" style={{ backgroundColor: `${theme.primaryColor}20`, color: theme.primaryColor }}>
-                                <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }}>
-                                    <PackageOpen className="w-6 h-6" />
+                                <motion.div>
+                                    {feature.icon}
                                 </motion.div>
                             </div>
                             <h3 className="text-xl font-black uppercase tracking-tighter italic">{feature.title}</h3>
