@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
 import { inventoryService } from '@/lib/services/storeService';
 import { useParams } from 'next/navigation';
-import { Landmark, Calculator, Receipt, Clock, CheckCircle2, Send, User, FileText, Phone, Bike, DollarSign, Loader2 } from 'lucide-react';
+import { Landmark, Calculator, Receipt, Clock, CheckCircle2, Send, User, FileText, Phone, Bike, DollarSign, Loader2, AlertTriangle } from 'lucide-react';
 
 export default function FinancingPage() {
     const { theme } = useStoreTheme();
@@ -30,6 +30,12 @@ export default function FinancingPage() {
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
 
+    // Derive selected moto price for validation
+    const selectedMoto = motos.find(m => m.id === formData.motoInteresse);
+    const selectedMotoPrice = selectedMoto ? Number(String(selectedMoto.price).replace(/\D/g, '')) : 0;
+    const entradaNum = Number(formData.entrada.replace(/\D/g, '') || '0');
+    const entryExceedsPrice = selectedMotoPrice > 0 && entradaNum > 0 && entradaNum >= selectedMotoPrice;
+
     const handleCpf = (val: string) => {
         let v = val.replace(/\D/g, '').slice(0, 11);
         v = v.replace(/(\d{3})(\d)/, '$1.$2');
@@ -47,6 +53,12 @@ export default function FinancingPage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate entry vs moto price
+        if (entryExceedsPrice) {
+            return; // blocked by UI, but safety check
+        }
+
         setSending(true);
 
         const selectedMoto = motos.find(m => m.id === formData.motoInteresse);
@@ -265,15 +277,20 @@ export default function FinancingPage() {
                                     <div>
                                         <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Entrada</label>
                                         <div className="relative">
-                                            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                                            <DollarSign className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${entryExceedsPrice ? 'text-red-500' : 'text-zinc-600'}`} />
                                             <input
                                                 type="text"
                                                 value={formData.entrada}
                                                 onChange={e => setFormData(p => ({ ...p, entrada: e.target.value.replace(/\D/g, '') }))}
                                                 placeholder="0"
-                                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-2 text-sm font-medium text-white outline-none focus:border-indigo-500 transition-colors"
+                                                className={`w-full bg-black/40 border rounded-xl py-3 pl-10 pr-2 text-sm font-medium text-white outline-none transition-colors ${entryExceedsPrice ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-indigo-500'}`}
                                             />
                                         </div>
+                                        {entryExceedsPrice && (
+                                            <p className="text-[9px] text-red-400 font-bold mt-1 ml-1 flex items-center gap-1">
+                                                <AlertTriangle className="w-3 h-3" /> Acima do valor da moto (R$ {new Intl.NumberFormat('pt-BR').format(selectedMotoPrice)})
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Parcelas</label>
@@ -305,8 +322,8 @@ export default function FinancingPage() {
 
                                 <button
                                     type="submit"
-                                    disabled={sending}
-                                    className="w-full py-4 rounded-xl font-black uppercase tracking-widest text-white text-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all disabled:opacity-50 mt-2"
+                                    disabled={sending || entryExceedsPrice}
+                                    className="w-full py-4 rounded-xl font-black uppercase tracking-widest text-white text-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                                     style={{ backgroundColor: '#25D366' }}
                                 >
                                     {sending ? (
