@@ -1,10 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
 
 export default function DashboardLayout({
     children,
@@ -13,6 +14,34 @@ export default function DashboardLayout({
 }) {
     const { theme } = useStoreTheme();
     const pathname = usePathname();
+    const router = useRouter();
+    const [isAuthed, setIsAuthed] = useState(false);
+
+    // Client-side auth guard (safety net — middleware handles server-side)
+    useEffect(() => {
+        async function checkAuth() {
+            if (!supabase) {
+                router.replace('/auth');
+                return;
+            }
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                localStorage.removeItem('jl_admin_session');
+                router.replace('/auth');
+            } else {
+                setIsAuthed(true);
+            }
+        }
+        checkAuth();
+    }, [router]);
+
+    if (!isAuthed) {
+        return (
+            <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-zinc-900 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     const menuItems = [
         { label: 'Visão Geral', icon: '🏠', href: '/dashboard' },
@@ -84,8 +113,16 @@ export default function DashboardLayout({
                                 Voltar ao Site
                             </Link>
                         )}
-                        <button className="text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-black transition-colors">Suporte</button>
-                        <div className="w-10 h-10 rounded-full bg-zinc-100 border border-zinc-200" />
+                        <button
+                            onClick={async () => {
+                                if (supabase) await supabase.auth.signOut();
+                                localStorage.removeItem('jl_admin_session');
+                                window.location.href = '/auth';
+                            }}
+                            className="text-[10px] font-black uppercase tracking-widest px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                        >
+                            Sair
+                        </button>
                     </div>
                 </header>
                 <div className="flex-1 overflow-y-auto bg-zinc-50/50">
