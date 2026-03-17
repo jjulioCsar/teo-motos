@@ -244,7 +244,7 @@ export default function LiveEditorOverlay() {
                             ))}
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-8 space-y-10">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
                             <AnimatePresence mode="wait">
                                 {activeTab === 'design' && (
                                     <motion.div key="design" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-8">
@@ -539,9 +539,12 @@ export default function LiveEditorOverlay() {
                                 )}
 
                                 {activeTab === 'config' && (
-                                    <motion.div key="config" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-8">
+                                    <motion.div key="config" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-6">
+                                        {/* Section: WhatsApp & Contact */}
                                         <div className="space-y-4">
-                                            <div className="space-y-2">
+                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 border-b border-indigo-500/30 pb-2 flex items-center gap-2">
+                                                <MessageCircle className="w-3 h-3" /> WhatsApp & Contato
+                                            </h3>
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">WhatsApp (Número Limpo)</label>
                                                 <input
                                                     type="text"
@@ -561,6 +564,11 @@ export default function LiveEditorOverlay() {
                                                     className="w-full bg-white/5 border border-white/10 rounded-xl py-4 px-4 text-xs font-bold text-white transition-all focus:border-indigo-500 outline-none"
                                                 />
                                             </div>
+                                        {/* Section: Location */}
+                                        <div className="space-y-4">
+                                            <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-400 border-b border-indigo-500/30 pb-2 flex items-center gap-2">
+                                                <Globe className="w-3 h-3" /> Localização
+                                            </h3>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Endereço da Loja</label>
 

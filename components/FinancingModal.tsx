@@ -26,7 +26,8 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
     const [step, setStep] = useState<'simulation' | 'lead'>('simulation');
 
     // Simulation State
-    const [entry, setEntry] = useState(motorcycle.price * 0.3); // 30% default
+    const [entryPercent, setEntryPercent] = useState(30); // percentage
+    const entry = Math.round(motorcycle.price * (entryPercent / 100));
     const [months, setMonths] = useState(48);
     const [monthlyPayment, setMonthlyPayment] = useState(0);
 
@@ -38,10 +39,12 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
 
     // Constants
     const INTEREST_RATE = 0.018; // 1.8% a.m.
+    const MIN_ENTRY_PERCENT = 0;
+    const MAX_ENTRY_PERCENT = 90;
 
     useEffect(() => {
         if (isOpen) {
-            setEntry(motorcycle.price * 0.3);
+            setEntryPercent(30);
             setMonths(48);
             setStep('simulation');
         }
@@ -57,11 +60,15 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
         const n = months;
         const pmt = principal * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
         setMonthlyPayment(pmt);
-    }, [entry, months, motorcycle.price]);
+    }, [entryPercent, months, motorcycle.price, entry]);
 
     const handleSimulationSubmit = () => {
         if (entry >= motorcycle.price) {
-            addToast('A entrada deve ser menor que o valor da moto.', 'warning');
+            addToast('A entrada não pode ser igual ou maior que o valor da moto.', 'warning');
+            return;
+        }
+        if (monthlyPayment <= 0) {
+            addToast('Configure a simulação corretamente.', 'warning');
             return;
         }
         setStep('lead');
@@ -145,7 +152,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                         initial={{ scale: 0.9, y: 20, opacity: 0 }}
                         animate={{ scale: 1, y: 0, opacity: 1 }}
                         exit={{ scale: 0.9, y: 20, opacity: 0 }}
-                        className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+                        className="relative w-full max-w-lg bg-zinc-900 border border-white/10 rounded-t-3xl md:rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
                     >
                         {/* Header */}
                         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
@@ -182,29 +189,28 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Sua Entrada</label>
-                                                <input
-                                                    type="number"
-                                                    value={entry}
-                                                    onChange={(e) => setEntry(Number(e.target.value))}
-                                                    className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-sm font-bold text-white outline-none focus:border-indigo-500"
-                                                />
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Sua Entrada ({entryPercent}%)</label>
+                                                <div className="bg-black/40 border border-white/10 rounded-xl p-3 text-sm font-bold text-white">
+                                                    {formatCurrency(entry)}
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div className="space-y-2">
                                             <input
                                                 type="range"
-                                                min={0}
-                                                max={motorcycle.price * 0.9}
-                                                value={entry}
-                                                onChange={(e) => setEntry(Number(e.target.value))}
-                                                className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                                                min={MIN_ENTRY_PERCENT}
+                                                max={MAX_ENTRY_PERCENT}
+                                                step={5}
+                                                value={entryPercent}
+                                                onChange={(e) => setEntryPercent(Number(e.target.value))}
+                                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
                                                 style={{ accentColor: primaryColor }}
                                             />
                                             <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-600">
                                                 <span>Sem Entrada</span>
-                                                <span>90% do valor</span>
+                                                <span>{entryPercent}%</span>
+                                                <span>90%</span>
                                             </div>
                                         </div>
 
@@ -215,7 +221,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                                                     <button
                                                         key={m}
                                                         onClick={() => setMonths(m)}
-                                                        className={`py-2 rounded-lg text-xs font-black transition-all border ${months === m ? 'bg-white text-black border-white' : 'bg-transparent text-zinc-500 border-white/10 hover:border-white/30'}`}
+                                                        className={`py-2.5 rounded-xl text-xs font-black transition-all border ${months === m ? 'bg-white text-black border-white shadow-lg' : 'bg-transparent text-zinc-500 border-white/10 hover:border-white/30'}`}
                                                     >
                                                         {m}x
                                                     </button>
@@ -223,11 +229,32 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                                             </div>
                                         </div>
 
-                                        <div className="bg-zinc-800/50 rounded-2xl p-4 text-center border border-white/5 space-y-1">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Valor da Parcela</p>
-                                            <p className="text-3xl font-black text-white tracking-tighter" style={{ color: primaryColor }}>
-                                                {formatCurrency(monthlyPayment)}
-                                            </p>
+                                        {/* Result Summary */}
+                                        <div className="bg-zinc-800/50 rounded-2xl p-5 border border-white/5 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Valor da Parcela</p>
+                                                <p className="text-2xl font-black tracking-tighter" style={{ color: primaryColor }}>
+                                                    {formatCurrency(monthlyPayment)}
+                                                </p>
+                                            </div>
+                                            <div className="h-px bg-white/5" />
+                                            <div className="grid grid-cols-2 gap-3 text-[10px]">
+                                                <div>
+                                                    <p className="font-bold text-zinc-600 uppercase tracking-widest">Financiado</p>
+                                                    <p className="font-black text-white text-sm">{formatCurrency(motorcycle.price - entry)}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-zinc-600 uppercase tracking-widest">Total c/ Juros</p>
+                                                    <p className="font-black text-white/60 text-sm">{formatCurrency(monthlyPayment * months)}</p>
+                                                </div>
+                                            </div>
+                                            {/* Visual bar */}
+                                            <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                                                <div 
+                                                    className="h-full rounded-full transition-all duration-300" 
+                                                    style={{ width: `${entryPercent}%`, backgroundColor: primaryColor }}
+                                                />
+                                            </div>
                                         </div>
 
                                         <button

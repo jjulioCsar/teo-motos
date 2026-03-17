@@ -37,7 +37,7 @@ export default function StorePage() {
     return (
         <div className="relative text-white">
             {/* Hero Section */}
-            <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
+            <section className="relative h-[70vh] md:h-[90vh] flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black to-transparent z-10" />
                 <div className="absolute inset-0 z-0">
                     <Image
@@ -67,7 +67,7 @@ export default function StorePage() {
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
-                        className="text-6xl md:text-8xl font-black tracking-tighter uppercase leading-[0.85] italic mb-8"
+                        className="text-4xl md:text-6xl lg:text-8xl font-black tracking-tighter uppercase leading-[0.85] italic mb-8"
                     >
                         {theme.heroTitle?.includes('?') ? (
                             <>
@@ -105,8 +105,8 @@ export default function StorePage() {
             </section>
 
             {/* Features Info */}
-            <section className="py-24 bg-zinc-900/50">
-                <div className="container px-8 mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+            <section className="py-12 md:py-24 bg-zinc-900/50">
+                <div className="container px-6 md:px-8 mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
                     {[
                         { title: theme.feature1Title || 'Qualidade Garantida', desc: theme.feature1Desc || 'Todas as nossas motos passam por uma rigorosa vistoria técnica.' },
                         { title: theme.feature2Title || 'Financiamento Fácil', desc: theme.feature2Desc || 'As melhores taxas do mercado com aprovação rápida e sem burocracia.' },
@@ -131,10 +131,10 @@ export default function StorePage() {
             </section>
 
             {/* Featured Selection */}
-            <section className="py-32 max-w-[1600px] px-8 mx-auto">
+            <section className="py-16 md:py-32 max-w-[1600px] px-4 md:px-8 mx-auto">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
                     <div>
-                        <h2 className="text-4xl font-black tracking-tighter uppercase italic mb-4" style={{ color: theme.primaryColor }}>
+                        <h2 className="text-2xl md:text-4xl font-black tracking-tighter uppercase italic mb-4" style={{ color: theme.primaryColor }}>
                             {theme.featuredTitle?.split('?')[0] || 'Destaques da Semana'}
                             {theme.featuredTitle?.includes('?') && (
                                 <>
@@ -158,7 +158,7 @@ export default function StorePage() {
                                 transition={{ delay: i * 0.1 }}
                                 key={moto.id}
                                 onClick={() => handleMotoClick(moto)}
-                                className="group relative rounded-[3rem] overflow-hidden bg-zinc-950 border border-white/5 aspect-[4/5] hover:border-white/20 transition-all cursor-pointer shadow-2xl"
+                                className="group relative rounded-2xl md:rounded-[3rem] overflow-hidden bg-zinc-950 border border-white/5 aspect-[3/4] md:aspect-[4/5] hover:border-white/20 transition-all cursor-pointer shadow-2xl"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
                                 <img
@@ -167,7 +167,7 @@ export default function StorePage() {
                                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                                     loading="lazy"
                                 />
-                                <div className="absolute bottom-0 left-0 p-10 z-20 w-full group-hover:pb-12 transition-all duration-500">
+                                <div className="absolute bottom-0 left-0 p-6 md:p-10 z-20 w-full group-hover:pb-8 md:group-hover:pb-12 transition-all duration-500">
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4">
                                         <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-white/10" style={{ color: theme.primaryColor }}>
                                             {moto.fuelType || 'GASOLINA'}
@@ -181,7 +181,7 @@ export default function StorePage() {
                                             {moto.year}
                                         </span>
                                     </div>
-                                    <h3 className="text-3xl font-black mb-2 uppercase italic tracking-tighter leading-tight">{moto.model}</h3>
+                                    <h3 className="text-xl md:text-3xl font-black mb-2 uppercase italic tracking-tighter leading-tight">{moto.model}</h3>
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-6">{moto.km || '0'} KM</p>
 
                                     <div className="flex items-center justify-between">
@@ -207,7 +207,7 @@ export default function StorePage() {
             </section>
 
             {/* About Teaser */}
-            <section className="py-32 container px-8 mx-auto border-t border-white/5">
+            <section className="py-16 md:py-32 container px-4 md:px-8 mx-auto border-t border-white/5">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                     <div className="relative aspect-video rounded-[3rem] overflow-hidden bg-zinc-900 border border-white/5 flex items-center justify-center">
                         <img
@@ -218,7 +218,7 @@ export default function StorePage() {
                         <div className="absolute inset-0 bg-gradient-to-r from-black to-transparent" />
                     </div>
                     <div className="space-y-8">
-                        <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
+                        <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-none">
                             {theme.aboutTeaserTitle || "Paixão por Duas Rodas"}
                         </h2>
                         <p className="text-white/60 font-medium leading-relaxed">
