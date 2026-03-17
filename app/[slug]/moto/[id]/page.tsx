@@ -6,7 +6,6 @@ import {
     ChevronLeft,
     ChevronRight,
     Share2,
-    Heart,
     ShieldCheck,
     Zap,
     Info,
@@ -139,8 +138,27 @@ export default function MotorcycleDetailsPage() {
                                 {moto.condition || 'Seminova'}
                             </span>
                             <div className="flex gap-2">
-                                <button className="p-2 rounded-full border border-white/10 hover:bg-white/5 transition-colors"><Share2 className="w-4 h-4" /></button>
-                                <button className="p-2 rounded-full border border-white/10 hover:bg-white/5 transition-colors"><Heart className="w-4 h-4" /></button>
+                                <button 
+                                    onClick={async () => {
+                                        const shareData = {
+                                            title: `${moto.make} ${moto.model} - ${theme.name}`,
+                                            text: `Confira esta ${moto.make} ${moto.model} por R$ ${new Intl.NumberFormat('pt-BR').format(Number(String(moto.price).replace(/\D/g, '')))}`,
+                                            url: window.location.href,
+                                        };
+                                        try {
+                                            if (navigator.share) {
+                                                await navigator.share(shareData);
+                                            } else {
+                                                await navigator.clipboard.writeText(window.location.href);
+                                                alert('Link copiado!');
+                                            }
+                                        } catch {}
+                                    }}
+                                    className="p-2 rounded-full border border-white/10 hover:bg-white/5 transition-colors"
+                                    title="Compartilhar"
+                                >
+                                    <Share2 className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
                         <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase leading-[0.9]">
@@ -235,9 +253,25 @@ export default function MotorcycleDetailsPage() {
                                 <p className="text-sm font-bold">{theme.name}</p>
                                 <p className="text-sm text-white/40">{theme.address || 'Venha nos visitar'}</p>
                             </div>
-                            <div className="h-40 bg-zinc-800 rounded-2xl flex items-center justify-center text-xs text-white/20 uppercase font-black italic tracking-widest text-center px-4">
-                                Carregando mapa interativo...
-                            </div>
+                            {theme.mapUrl ? (
+                                <div className="h-40 rounded-2xl overflow-hidden border border-white/10">
+                                    <iframe
+                                        src={theme.mapUrl}
+                                        className="w-full h-full border-0"
+                                        allowFullScreen
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer-when-downgrade"
+                                    />
+                                </div>
+                            ) : (
+                                <a
+                                    href={`https://www.google.com/maps/search/${encodeURIComponent(theme.address || theme.name)}`}
+                                    target="_blank"
+                                    className="h-40 bg-zinc-800 rounded-2xl flex items-center justify-center text-xs text-white/40 uppercase font-black italic tracking-widest text-center px-4 hover:bg-zinc-700 transition-colors"
+                                >
+                                    Ver no Google Maps →
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { compressImage } from '@/lib/imageCompressor';
 
 // Types for better structure
 export interface Store {
@@ -304,13 +305,19 @@ export const storeService = {
         if (!supabase) return null;
 
         try {
-            const fileExt = file.name.split('.').pop();
+            // Compress image before upload (handles large phone photos)
+            const compressed = await compressImage(file);
+            
+            const fileExt = compressed.name.split('.').pop() || 'webp';
             const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
             const filePath = `${fileName}`;
 
             const { data, error } = await supabase.storage
                 .from('images')
-                .upload(filePath, file);
+                .upload(filePath, compressed, {
+                    contentType: compressed.type,
+                    cacheControl: '31536000', // 1 year cache
+                });
 
             if (error) throw error;
 

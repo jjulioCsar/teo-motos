@@ -50,7 +50,11 @@ export default function LiveEditorOverlay() {
 
     // Auto-open editor if ?edit=true is present
     useEffect(() => {
-        if (searchParams?.get('edit') === 'true' && isEditMode) {
+        if (searchParams?.get('edit') === 'true') {
+            // Activate edit mode first (fixes race condition on first load after login)
+            if (!isEditMode) {
+                setEditMode(true);
+            }
             setIsOpen(true);
             // Clean up the URL after opening
             const newParams = new URLSearchParams(searchParams.toString());
@@ -58,7 +62,7 @@ export default function LiveEditorOverlay() {
             const cleanUrl = `${window.location.pathname}${newParams.toString() ? '?' + newParams.toString() : ''}`;
             window.history.replaceState({}, '', cleanUrl);
         }
-    }, [searchParams, isEditMode]);
+    }, [searchParams, isEditMode, setEditMode]);
 
     // Cropper State
     const [cropFile, setCropFile] = useState<File | null>(null);
