@@ -3,7 +3,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
-import { Mail, MapPin, Clock, MessageSquare, Instagram } from 'lucide-react';
+import { Mail, MapPin, Clock, Instagram } from 'lucide-react';
+import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
 export default function ContactPage() {
     const { theme } = useStoreTheme();
@@ -49,24 +51,26 @@ export default function ContactPage() {
 
                             <div className="space-y-3 md:space-y-4">
                                 {/* WhatsApp Button */}
-                                <motion.a
-                                    href={`https://wa.me/${theme.whatsappNumber?.replace(/\D/g, '')}?text=${encodeURIComponent(theme.whatsappMessage || '')}`}
-                                    target="_blank"
+                                <motion.button
+                                    onClick={() => {
+                                        const url = buildWhatsAppUrl(theme.whatsappMessage || '');
+                                        window.open(url, '_blank');
+                                    }}
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
-                                    className="flex items-center gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl bg-[#25D366] text-black group transition-all"
+                                    className="flex items-center gap-3 md:gap-4 p-4 md:p-6 rounded-xl md:rounded-2xl bg-[#25D366] text-white group transition-all w-full"
                                 >
-                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-black/10 flex items-center justify-center shrink-0">
-                                        <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
+                                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                                        <WhatsAppIcon className="w-5 h-5 md:w-6 md:h-6" />
                                     </div>
                                     <div className="flex-1 min-w-0 text-left">
                                         <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest opacity-60">WhatsApp</p>
                                         <p className="text-base md:text-lg font-black uppercase italic truncate">{theme.whatsappNumber}</p>
                                     </div>
-                                    <div className="px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-black/10 text-[8px] md:text-[10px] font-black uppercase tracking-widest group-hover:bg-black/20 transition-colors shrink-0">
+                                    <div className="px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/20 text-[8px] md:text-[10px] font-black uppercase tracking-widest group-hover:bg-white/30 transition-colors shrink-0">
                                         Conversar Agora
                                     </div>
-                                </motion.a>
+                                </motion.button>
 
                                 {/* Instagram Button */}
                                 <motion.a
@@ -149,7 +153,7 @@ export default function ContactPage() {
                                     <p className="text-sm md:text-xl font-bold max-w-md">{theme.address}</p>
                                 </div>
                                 <motion.a
-                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(theme.address || '')}`}
+                                    href="https://maps.app.goo.gl/wUXhSQJUCR4L572y6"
                                     target="_blank"
                                     whileHover={{ scale: 1.05 }}
                                     className="px-4 py-3 md:p-5 rounded-xl md:rounded-2xl bg-white text-black text-[10px] md:text-xs font-black uppercase tracking-widest text-center shrink-0 inline-block"

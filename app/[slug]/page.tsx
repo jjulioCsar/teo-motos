@@ -225,7 +225,7 @@ export default function StorePage() {
                             {theme.aboutTeaserText || `Na curadoria da nossa loja selecionamos apenas máquinas impecáveis para garantir que sua única preocupação seja o destino.`}
                         </p>
                         <a
-                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(theme.address || theme.name)}`}
+                            href="https://maps.app.goo.gl/wUXhSQJUCR4L572y6"
                             target="_blank"
                             className="flex items-center gap-4 p-6 bg-zinc-900/50 rounded-[2rem] border border-white/5 hover:border-white/20 transition-all group"
                         >

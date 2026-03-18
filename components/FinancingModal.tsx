@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calculator, DollarSign, Calendar, User, Phone, FileText, Send, Loader2 } from 'lucide-react';
-import { storeService, leadService } from '@/lib/services/storeService';
+import { X, User, Phone, FileText, Loader2, DollarSign, Calendar, Wallet } from 'lucide-react';
+import { leadService } from '@/lib/services/storeService';
 import { useToast } from '@/lib/context/ToastContext';
+import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
 interface FinancingModalProps {
     isOpen: boolean;
@@ -13,7 +15,9 @@ interface FinancingModalProps {
         id: string | number;
         make: string;
         model: string;
+        year?: string;
         price: number;
+        slug?: string;
         image?: string;
     };
     storeSlug: string;
@@ -23,59 +27,36 @@ interface FinancingModalProps {
 
 export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug, primaryColor = '#6366f1', whatsappNumber }: FinancingModalProps) {
     const { addToast } = useToast();
-    const [step, setStep] = useState<'simulation' | 'lead'>('simulation');
 
-    // Simulation State
-    const [entryPercent, setEntryPercent] = useState(30); // percentage
-    const entry = Math.round(motorcycle.price * (entryPercent / 100));
-    const [months, setMonths] = useState(48);
-    const [monthlyPayment, setMonthlyPayment] = useState(0);
-
-    // Lead State
+    // Form State — same fields as the financing page
     const [name, setName] = useState('');
     const [cpf, setCpf] = useState('');
     const [phone, setPhone] = useState('');
+    const [entrada, setEntrada] = useState('');
+    const [parcelas, setParcelas] = useState('48');
+    const [renda, setRenda] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Constants
-    const INTEREST_RATE = 0.018; // 1.8% a.m.
-    const MIN_ENTRY_PERCENT = 0;
-    const MAX_ENTRY_PERCENT = 90;
+    // Validation
+    const entradaNum = Number(entrada.replace(/\D/g, '') || '0');
+    const entryExceedsPrice = motorcycle.price > 0 && entradaNum > 0 && entradaNum >= motorcycle.price;
 
     useEffect(() => {
         if (isOpen) {
-            setEntryPercent(30);
-            setMonths(48);
-            setStep('simulation');
+            setName('');
+            setCpf('');
+            setPhone('');
+            setEntrada('');
+            setParcelas('48');
+            setRenda('');
         }
-    }, [isOpen, motorcycle.price]);
+    }, [isOpen]);
 
-    useEffect(() => {
-        const principal = motorcycle.price - entry;
-        if (principal <= 0) {
-            setMonthlyPayment(0);
-            return;
-        }
-        const i = INTEREST_RATE;
-        const n = months;
-        const pmt = principal * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
-        setMonthlyPayment(pmt);
-    }, [entryPercent, months, motorcycle.price, entry]);
+    const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    const handleSimulationSubmit = () => {
-        if (entry >= motorcycle.price) {
-            addToast('A entrada não pode ser igual ou maior que o valor da moto.', 'warning');
-            return;
-        }
-        if (monthlyPayment <= 0) {
-            addToast('Configure a simulação corretamente.', 'warning');
-            return;
-        }
-        setStep('lead');
-    };
-
-    const handleLeadSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (entryExceedsPrice) return;
         setLoading(true);
 
         try {
@@ -87,36 +68,37 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                 source: 'financing_modal'
             });
 
-            // 2. Format WhatsApp Message
-            const message = `*Simulação de Financiamento*\n\n` +
-                `🏍️ *Moto:* ${motorcycle.make} ${motorcycle.model}\n` +
-                `💰 *Valor:* R$ ${motorcycle.price.toLocaleString('pt-BR')}\n` +
-                `📉 *Entrada:* R$ ${entry.toLocaleString('pt-BR')}\n` +
-                `📅 *Prazo:* ${months}x de R$ ${monthlyPayment.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}\n\n` +
-                `👤 *Cliente:* ${name}\n` +
-                `📄 *CPF:* ${cpf}\n` +
-                `📱 *Tel:* ${phone}\n\n` +
-                `🔗 ${typeof window !== 'undefined' ? window.location.href : ''}\n\n` +
-                `_Gostaria de verificar a aprovação para esta condição._`;
+            // 2. Build moto link
+            const motoLink = typeof window !== 'undefined'
+                ? `${window.location.origin}/${storeSlug}/moto/${motorcycle.slug || motorcycle.id}`
+                : '';
 
-            const cleanPhone = whatsappNumber?.replace(/\D/g, '');
-            const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+            // 3. Format WhatsApp Message — same format as financing page
+            const message = `*SOLICITACAO DE FINANCIAMENTO*\n\n` +
+                `*Nome:* ${name}\n` +
+                `*CPF:* ${cpf}\n` +
+                `*Telefone:* ${phone}\n\n` +
+                `*Moto de Interesse:* ${motorcycle.make} ${motorcycle.model}${motorcycle.year ? ` (${motorcycle.year})` : ''}\n` +
+                (motoLink ? `Link: ${motoLink}\n` : '') +
+                `*Entrada Disponivel:* R$ ${entrada || '0'}\n` +
+                `*Parcelas Desejadas:* ${parcelas}x\n` +
+                `*Renda Mensal:* R$ ${renda || 'Nao informado'}\n\n` +
+                `_Solicitacao enviada pelo site_`;
 
-            // 3. Redirect
+            const url = buildWhatsAppUrl(message);
+
+            // 4. Redirect
             window.open(url, '_blank');
             onClose();
-            addToast('Simulação enviada! Aguarde nosso retorno.', 'success');
+            addToast('Solicitação enviada! Aguarde nosso retorno.', 'success');
 
         } catch (error) {
             console.error(error);
-            addToast('Erro ao salvar simulação. Tente novamente.', 'error');
+            addToast('Erro ao enviar solicitação. Tente novamente.', 'error');
         } finally {
             setLoading(false);
         }
     };
-
-    // Formatters
-    const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     // CPF Mask
     const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,11 +140,11 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                         <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}>
-                                    <Calculator className="w-5 h-5" />
+                                    <WhatsAppIcon className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-black uppercase italic tracking-tighter text-white">Simular Financiamento</h2>
-                                    <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">{motorcycle.make} {motorcycle.model}</p>
+                                    <h2 className="text-lg font-black uppercase italic tracking-tighter text-white">Solicitar Financiamento</h2>
+                                    <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">{motorcycle.make} {motorcycle.model} — {formatCurrency(motorcycle.price)}</p>
                                 </div>
                             </div>
                             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white">
@@ -170,175 +152,129 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                             </button>
                         </div>
 
-                        {/* Body */}
-                        <div className="p-6">
-                            <AnimatePresence mode="wait">
-                                {step === 'simulation' ? (
-                                    <motion.div
-                                        key="sim"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                        className="space-y-6"
-                                    >
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Valor da Moto</label>
-                                                <div className="bg-black/40 border border-white/10 rounded-xl p-3 text-sm font-bold text-white opacity-70">
-                                                    {formatCurrency(motorcycle.price)}
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Sua Entrada ({entryPercent}%)</label>
-                                                <div className="bg-black/40 border border-white/10 rounded-xl p-3 text-sm font-bold text-white">
-                                                    {formatCurrency(entry)}
-                                                </div>
-                                            </div>
-                                        </div>
+                        {/* Body - Same fields as financing page */}
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <p className="text-xs text-white/40 font-medium">
+                                Preencha seus dados abaixo para solicitar financiamento desta moto.
+                            </p>
 
-                                        <div className="space-y-2">
-                                            <input
-                                                type="range"
-                                                min={MIN_ENTRY_PERCENT}
-                                                max={MAX_ENTRY_PERCENT}
-                                                step={5}
-                                                value={entryPercent}
-                                                onChange={(e) => setEntryPercent(Number(e.target.value))}
-                                                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                                                style={{ accentColor: primaryColor }}
-                                            />
-                                            <div className="flex justify-between text-[10px] uppercase font-bold text-zinc-600">
-                                                <span>Sem Entrada</span>
-                                                <span>{entryPercent}%</span>
-                                                <span>90%</span>
-                                            </div>
-                                        </div>
+                            {/* Nome */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Nome Completo</label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                    <input
+                                        required
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        placeholder="Digite seu nome completo"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-white/30 transition-colors"
+                                    />
+                                </div>
+                            </div>
 
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Parcelas</label>
-                                            <div className="grid grid-cols-4 gap-2">
-                                                {[12, 24, 36, 48].map((m) => (
-                                                    <button
-                                                        key={m}
-                                                        onClick={() => setMonths(m)}
-                                                        className={`py-2.5 rounded-xl text-xs font-black transition-all border ${months === m ? 'bg-white text-black border-white shadow-lg' : 'bg-transparent text-zinc-500 border-white/10 hover:border-white/30'}`}
-                                                    >
-                                                        {m}x
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
+                            {/* CPF */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">CPF</label>
+                                <div className="relative">
+                                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                    <input
+                                        required
+                                        value={cpf}
+                                        onChange={handleCpfChange}
+                                        placeholder="000.000.000-00"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-white/30 transition-colors"
+                                    />
+                                </div>
+                            </div>
 
-                                        {/* Result Summary */}
-                                        <div className="bg-zinc-800/50 rounded-2xl p-5 border border-white/5 space-y-3">
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Valor da Parcela</p>
-                                                <p className="text-2xl font-black tracking-tighter" style={{ color: primaryColor }}>
-                                                    {formatCurrency(monthlyPayment)}
-                                                </p>
-                                            </div>
-                                            <div className="h-px bg-white/5" />
-                                            <div className="grid grid-cols-2 gap-3 text-[10px]">
-                                                <div>
-                                                    <p className="font-bold text-zinc-600 uppercase tracking-widest">Financiado</p>
-                                                    <p className="font-black text-white text-sm">{formatCurrency(motorcycle.price - entry)}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-zinc-600 uppercase tracking-widest">Total c/ Juros</p>
-                                                    <p className="font-black text-white/60 text-sm">{formatCurrency(monthlyPayment * months)}</p>
-                                                </div>
-                                            </div>
-                                            {/* Visual bar */}
-                                            <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
-                                                <div 
-                                                    className="h-full rounded-full transition-all duration-300" 
-                                                    style={{ width: `${entryPercent}%`, backgroundColor: primaryColor }}
-                                                />
-                                            </div>
-                                        </div>
+                            {/* Telefone */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">WhatsApp</label>
+                                <div className="relative">
+                                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                    <input
+                                        required
+                                        value={phone}
+                                        onChange={handlePhoneChange}
+                                        placeholder="(00) 00000-0000"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-white/30 transition-colors"
+                                    />
+                                </div>
+                            </div>
 
-                                        <button
-                                            onClick={handleSimulationSubmit}
-                                            className="w-full py-4 rounded-xl font-black uppercase tracking-widest hover:scale-[1.02] transition-transform flex items-center justify-center gap-2"
-                                            style={{ backgroundColor: primaryColor, color: '#fff' }}
-                                        >
-                                            Continuar <Send className="w-4 h-4" />
-                                        </button>
-                                    </motion.div>
-                                ) : (
-                                    <motion.div
-                                        key="lead"
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -20 }}
-                                        className="space-y-4"
-                                    >
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Seu Nome Completo</label>
-                                            <div className="relative">
-                                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                                                <input
-                                                    required
-                                                    value={name}
-                                                    onChange={(e) => setName(e.target.value)}
-                                                    placeholder="Digite seu nome"
-                                                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-indigo-500"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">CPF (Apenas para análise)</label>
-                                            <div className="relative">
-                                                <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                                                <input
-                                                    required
-                                                    value={cpf}
-                                                    onChange={handleCpfChange}
-                                                    placeholder="000.000.000-00"
-                                                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-indigo-500"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">WhatsApp de Contato</label>
-                                            <div className="relative">
-                                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                                                <input
-                                                    required
-                                                    value={phone}
-                                                    onChange={handlePhoneChange}
-                                                    placeholder="(00) 00000-0000"
-                                                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-indigo-500"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-4 flex gap-3">
-                                            <button
-                                                onClick={() => setStep('simulation')}
-                                                className="flex-1 py-3 rounded-xl font-bold uppercase tracking-wide border border-white/10 hover:bg-white/5 transition-colors text-white text-xs"
-                                            >
-                                                Voltar
-                                            </button>
-                                            <button
-                                                onClick={handleLeadSubmit}
-                                                disabled={!name || !cpf || !phone || loading}
-                                                className="flex-[2] py-3 rounded-xl font-black uppercase tracking-widest hover:brightness-110 transition-all text-white text-xs flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                style={{ backgroundColor: '#25D366' }} // WhatsApp Green
-                                            >
-                                                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Solicitar Aprovação'}
-                                            </button>
-                                        </div>
-
-                                        <p className="text-[9px] text-zinc-500 text-center px-4">
-                                            Ao continuar, seus dados serão enviados para nossa equipe via WhatsApp para análise de crédito.
-                                        </p>
-                                    </motion.div>
+                            {/* Entrada Disponível */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Entrada Disponível (R$)</label>
+                                <div className="relative">
+                                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                    <input
+                                        value={entrada}
+                                        onChange={(e) => setEntrada(e.target.value.replace(/\D/g, ''))}
+                                        placeholder="Ex: 3000"
+                                        className={`w-full bg-black/40 border rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none transition-colors ${entryExceedsPrice ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-white/30'}`}
+                                    />
+                                </div>
+                                {entryExceedsPrice && (
+                                    <p className="text-[10px] text-red-400 font-bold ml-1">A entrada não pode ser maior que o valor da moto ({formatCurrency(motorcycle.price)})</p>
                                 )}
-                            </AnimatePresence>
-                        </div>
+                            </div>
+
+                            {/* Parcelas */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Parcelas Desejadas</label>
+                                <div className="relative">
+                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                    <select
+                                        value={parcelas}
+                                        onChange={(e) => setParcelas(e.target.value)}
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-white/30 transition-colors appearance-none"
+                                    >
+                                        <option value="12">12x</option>
+                                        <option value="24">24x</option>
+                                        <option value="36">36x</option>
+                                        <option value="48">48x</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Renda Mensal */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Renda Mensal (R$)</label>
+                                <div className="relative">
+                                    <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                    <input
+                                        value={renda}
+                                        onChange={(e) => setRenda(e.target.value.replace(/\D/g, ''))}
+                                        placeholder="Ex: 2500"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none focus:border-white/30 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Submit */}
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={!name || !cpf || !phone || loading || entryExceedsPrice}
+                                    className="w-full py-4 rounded-xl font-black uppercase tracking-widest hover:brightness-110 transition-all text-white text-sm flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style={{ backgroundColor: '#25D366' }}
+                                >
+                                    {loading ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <WhatsAppIcon className="w-5 h-5" />
+                                            Enviar via WhatsApp
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            <p className="text-[9px] text-zinc-500 text-center px-4">
+                                Ao continuar, seus dados serão enviados para nossa equipe via WhatsApp para análise de crédito.
+                            </p>
+                        </form>
                     </motion.div>
                 </div>
             )}

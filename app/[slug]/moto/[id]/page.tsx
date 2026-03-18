@@ -12,12 +12,16 @@ import {
     Calendar,
     Gauge,
     Palette,
-    ArrowLeft
+    ArrowLeft,
+    X,
+    ZoomIn
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { storeService, inventoryService } from '@/lib/services/storeService';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
 import { useToast } from '@/lib/context/ToastContext';
+import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import Image from 'next/image';
 import FinancingModal from '@/components/FinancingModal';
 
@@ -27,6 +31,7 @@ export default function MotorcycleDetailsPage() {
     const { theme } = useStoreTheme();
     const { addToast } = useToast();
     const [activeImage, setActiveImage] = useState(0);
+    const [zoomedImage, setZoomedImage] = useState<string | null>(null);
     const [moto, setMoto] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isFinancingModalOpen, setIsFinancingModalOpen] = useState(false);
@@ -91,7 +96,7 @@ export default function MotorcycleDetailsPage() {
             <div className="container px-4 mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
                 {/* Gallery Section */}
                 <div className="lg:col-span-8 space-y-4">
-                    <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden bg-zinc-900 border border-white/5 shadow-2xl">
+                    <div className="relative rounded-[2rem] overflow-hidden bg-zinc-900 border border-white/5 shadow-2xl cursor-pointer group" onClick={() => setZoomedImage(images[activeImage])}>
                         <AnimatePresence mode="wait">
                             <motion.img
                                 key={activeImage}
@@ -100,20 +105,24 @@ export default function MotorcycleDetailsPage() {
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.5 }}
                                 src={images[activeImage] || 'https://images.unsplash.com/photo-1558981403-c5f91cbba527?q=80&w=2070'}
-                                className="w-full h-full object-cover"
+                                className="w-full h-auto max-h-[70vh] object-contain bg-zinc-950"
                             />
                         </AnimatePresence>
+
+                        <div className="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                            <ZoomIn className="w-5 h-5" />
+                        </div>
 
                         {images.length > 1 && (
                             <div className="absolute inset-0 flex items-center justify-between px-6 pointer-events-none">
                                 <button
-                                    onClick={() => setActiveImage(prev => prev > 0 ? prev - 1 : images.length - 1)}
+                                    onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev > 0 ? prev - 1 : images.length - 1); }}
                                     className="p-3 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 text-white pointer-events-auto hover:bg-white hover:text-black transition-all"
                                 >
                                     <ChevronLeft className="w-6 h-6" />
                                 </button>
                                 <button
-                                    onClick={() => setActiveImage(prev => prev < images.length - 1 ? prev + 1 : 0)}
+                                    onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev < images.length - 1 ? prev + 1 : 0); }}
                                     className="p-3 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 text-white pointer-events-auto hover:bg-white hover:text-black transition-all"
                                 >
                                     <ChevronRight className="w-6 h-6" />
@@ -123,14 +132,15 @@ export default function MotorcycleDetailsPage() {
                     </div>
 
                     {images.length > 1 && (
-                        <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+                        <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar">
                             {images.map((img: string, i: number) => (
                                 <button
                                     key={i}
                                     onClick={() => setActiveImage(i)}
-                                    className={`relative flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all ${activeImage === i ? 'border-indigo-500 scale-95' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                                    className={`relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${activeImage === i ? 'scale-95' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                                    style={activeImage === i ? { borderColor: theme.primaryColor } : {}}
                                 >
-                                    <img src={img} className="w-full h-full object-cover" />
+                                    <img src={img} className="w-full h-full object-cover" loading="lazy" />
                                 </button>
                             ))}
                         </div>
@@ -203,13 +213,16 @@ export default function MotorcycleDetailsPage() {
                         </div>
 
                         <div className="space-y-3">
-                            <a
-                                href={`https://wa.me/${theme.whatsappNumber?.replace(/\D/g, '')}?text=${encodeURIComponent(`Olá, tenho interesse na ${moto.make} ${moto.model} anunciada no site.\n\n🔗 ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
-                                target="_blank"
-                                className="w-full bg-white text-black py-4 rounded-2xl font-black text-center text-lg hover:scale-[1.02] transition-transform block"
+                            <button
+                                onClick={() => {
+                                    const message = `Ola, tenho interesse na ${moto.make} ${moto.model} anunciada no site.\n\nLink: ${typeof window !== 'undefined' ? window.location.href : ''}`;
+                                    const url = buildWhatsAppUrl(message);
+                                    window.open(url, '_blank');
+                                }}
+                                className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-center text-lg hover:scale-[1.02] transition-transform flex items-center justify-center gap-3"
                             >
-                                Quero Proposta
-                            </a>
+                                <WhatsAppIcon className="w-5 h-5" /> Quero Proposta
+                            </button>
                             <button
                                 onClick={() => setIsFinancingModalOpen(true)}
                                 className="w-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 py-4 rounded-2xl font-black text-lg hover:bg-indigo-500/20 transition-all flex items-center justify-center gap-2"
@@ -254,45 +267,74 @@ export default function MotorcycleDetailsPage() {
                             </div>
                         )}
                     </div>
-
-                    {/* Full-width map section */}
-                    <div className="bg-zinc-900 border border-white/5 rounded-3xl p-6 md:p-8 space-y-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div>
-                                <h3 className="text-xl font-bold uppercase italic">Localização</h3>
-                                <p className="text-sm font-bold mt-1">{theme.name}</p>
-                                <p className="text-sm text-white/40">{theme.address || 'Venha nos visitar'}</p>
-                            </div>
-                            <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(theme.address || theme.name)}`}
-                                target="_blank"
-                                className="px-5 py-3 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform shrink-0 text-center"
-                            >
-                                Abrir no Maps
-                            </a>
-                        </div>
-                        {theme.mapUrl ? (
-                            <div className="h-64 md:h-80 rounded-2xl overflow-hidden border border-white/10">
-                                <iframe
-                                    src={theme.mapUrl}
-                                    className="w-full h-full border-0"
-                                    allowFullScreen
-                                    loading="lazy"
-                                    referrerPolicy="no-referrer-when-downgrade"
-                                />
-                            </div>
-                        ) : (
-                            <a
-                                href={`https://www.google.com/maps/search/${encodeURIComponent(theme.address || theme.name)}`}
-                                target="_blank"
-                                className="h-48 bg-zinc-800 rounded-2xl flex items-center justify-center text-xs text-white/40 uppercase font-black italic tracking-widest text-center px-4 hover:bg-zinc-700 transition-colors"
-                            >
-                                Ver no Google Maps →
-                            </a>
-                        )}
-                    </div>
                 </div>
             </div>
+
+            {/* Full-width map section — outside max-w-4xl */}
+            <div className="container px-4 mx-auto mt-12 mb-20">
+                <div className="bg-zinc-900 border border-white/5 rounded-3xl p-6 md:p-8 space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <h3 className="text-xl font-bold uppercase italic">Localização</h3>
+                            <p className="text-sm font-bold mt-1">{theme.name}</p>
+                            <p className="text-sm text-white/40">{theme.address || 'Venha nos visitar'}</p>
+                        </div>
+                        <a
+                            href="https://maps.app.goo.gl/wUXhSQJUCR4L572y6"
+                            target="_blank"
+                            className="px-5 py-3 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform shrink-0 text-center"
+                        >
+                            Abrir no Maps
+                        </a>
+                    </div>
+                    {theme.mapUrl ? (
+                        <div className="h-64 md:h-80 rounded-2xl overflow-hidden border border-white/10">
+                            <iframe
+                                src={theme.mapUrl}
+                                className="w-full h-full border-0"
+                                allowFullScreen
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                            />
+                        </div>
+                    ) : (
+                        <a
+                            href="https://maps.app.goo.gl/wUXhSQJUCR4L572y6"
+                            target="_blank"
+                            className="h-48 bg-zinc-800 rounded-2xl flex items-center justify-center text-xs text-white/40 uppercase font-black italic tracking-widest text-center px-4 hover:bg-zinc-700 transition-colors"
+                        >
+                            Ver no Google Maps →
+                        </a>
+                    )}
+                </div>
+            </div>
+
+            {/* Image Zoom Modal */}
+            <AnimatePresence>
+                {zoomedImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4"
+                        onClick={() => setZoomedImage(null)}
+                    >
+                        <button
+                            onClick={() => setZoomedImage(null)}
+                            className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                        <motion.img
+                            initial={{ scale: 0.9 }}
+                            animate={{ scale: 1 }}
+                            src={zoomedImage}
+                            className="max-w-full max-h-[90vh] object-contain rounded-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <FinancingModal
                 isOpen={isFinancingModalOpen}

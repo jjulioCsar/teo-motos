@@ -68,11 +68,11 @@ export default function StorefrontLayout({
         <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-primary-foreground">
             {/* Navbar */}
             <header
-                className="sticky top-0 z-50 w-full border-b bg-black backdrop-blur-xl"
+                className="sticky top-0 z-[110] w-full border-b bg-black backdrop-blur-xl"
                 style={{ borderBottomColor: theme.tertiaryColor ? `${theme.tertiaryColor}20` : 'rgba(255,255,255,0.1)' }}
             >
                 <div className="container flex h-16 items-center justify-between px-4 mx-auto">
-                    <Link href={`/${slug}`} className="flex items-center gap-3 relative z-[60]">
+                    <Link href={`/${slug}`} className="flex items-center gap-3 relative z-[110]">
                         {theme.logo ? (
                             <div className="relative h-10 w-24">
                                 <Image
@@ -101,7 +101,7 @@ export default function StorefrontLayout({
                         ))}
                     </nav>
 
-                    <div className="flex items-center gap-4 relative z-[60]">
+                    <div className="flex items-center gap-4 relative z-[110]">
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             className="md:hidden w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10"
@@ -110,39 +110,41 @@ export default function StorefrontLayout({
                         </button>
                     </div>
                 </div>
-
-                <AnimatePresence>
-                    {isMenuOpen && (
-                        <motion.div
-                            initial={{ opacity: 0, x: '100%' }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="fixed inset-0 z-50 bg-black/95 backdrop-blur-2xl md:hidden pt-24 px-8"
-                        >
-                            <nav className="flex flex-col gap-6">
-                                {navLinks.map((link, i) => (
-                                    <motion.div
-                                        key={link.href}
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: i * 0.1 }}
-                                    >
-                                        <Link
-                                            href={link.href}
-                                            onClick={() => setIsMenuOpen(false)}
-                                            className="text-4xl font-black italic uppercase tracking-tighter hover:text-indigo-400 transition-colors block"
-                                            style={{ color: i === 0 ? theme.primaryColor : 'white' }}
-                                        >
-                                            {link.label}
-                                        </Link>
-                                    </motion.div>
-                                ))}
-                            </nav>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
             </header>
+
+            {/* Mobile Menu - outside header to avoid stacking context issues */}
+            <AnimatePresence>
+                {isMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, x: '100%' }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className="fixed inset-0 z-[100] bg-black md:hidden pt-24 px-8"
+                    >
+                        <nav className="flex flex-col gap-6">
+                            {navLinks.map((link, i) => (
+                                <motion.div
+                                    key={link.href}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.1 }}
+                                >
+                                    <Link
+                                        href={link.href}
+                                        onClick={() => setIsMenuOpen(false)}
+                                        className="text-4xl font-black italic uppercase tracking-tighter hover:text-indigo-400 transition-colors block"
+                                        style={{ color: i === 0 ? theme.primaryColor : 'white' }}
+                                    >
+                                        {link.label}
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </nav>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <main>{children}</main>
             <WhatsAppButton />
             {isEditMode && (
@@ -157,7 +159,7 @@ export default function StorefrontLayout({
                 <div className="container px-4 mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-white/40 text-sm">
                     <p>© 2026 {theme.name}. Todos os direitos reservados.</p>
                     <a
-                        href="https://wa.me/5582991480837"
+                        href="https://www.portfolio.juliocesar.site"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-white transition-colors flex items-center gap-2 font-medium"

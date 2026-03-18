@@ -6,6 +6,8 @@ import { useStoreTheme } from '@/lib/context/ThemeContext';
 import { inventoryService } from '@/lib/services/storeService';
 import { useParams } from 'next/navigation';
 import { Landmark, Calculator, Receipt, Clock, CheckCircle2, Send, User, FileText, Phone, Bike, DollarSign, Loader2, AlertTriangle } from 'lucide-react';
+import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
 export default function FinancingPage() {
     const { theme } = useStoreTheme();
@@ -65,19 +67,18 @@ export default function FinancingPage() {
         const motoName = selectedMoto ? `${selectedMoto.make} ${selectedMoto.model} (${selectedMoto.year})` : 'Não especificou';
         const motoLink = selectedMoto ? `${typeof window !== 'undefined' ? window.location.origin : ''}/${slug}/moto/${selectedMoto.slug || selectedMoto.id}` : '';
 
-        const message = `*SIMULAÇÃO DE FINANCIAMENTO*\n\n` +
-            `👤 *Nome:* ${formData.name}\n` +
-            `📄 *CPF:* ${formData.cpf}\n` +
-            `📱 *Telefone:* ${formData.phone}\n\n` +
-            `🏍️ *Moto de Interesse:* ${motoName}\n` +
-            (motoLink ? `🔗 ${motoLink}\n` : '') +
-            `💵 *Entrada Disponível:* R$ ${formData.entrada || '0'}\n` +
-            `📅 *Parcelas Desejadas:* ${formData.parcelas}x\n` +
-            `💰 *Renda Mensal:* R$ ${formData.renda || 'Não informado'}\n\n` +
-            `_Solicitação enviada pelo site ${theme.name}_`;
+        const message = `*SIMULACAO DE FINANCIAMENTO*\n\n` +
+            `*Nome:* ${formData.name}\n` +
+            `*CPF:* ${formData.cpf}\n` +
+            `*Telefone:* ${formData.phone}\n\n` +
+            `*Moto de Interesse:* ${motoName}\n` +
+            (motoLink ? `Link: ${motoLink}\n` : '') +
+            `*Entrada Disponivel:* R$ ${formData.entrada || '0'}\n` +
+            `*Parcelas Desejadas:* ${formData.parcelas}x\n` +
+            `*Renda Mensal:* R$ ${formData.renda || 'Nao informado'}\n\n` +
+            `_Solicitacao enviada pelo site ${theme.name}_`;
 
-        const cleanPhone = theme.whatsappNumber?.replace(/\D/g, '') || '';
-        const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+        const url = buildWhatsAppUrl(message);
 
         window.open(url, '_blank');
         setSent(true);
@@ -329,7 +330,7 @@ export default function FinancingPage() {
                                     {sending ? (
                                         <><Loader2 className="w-5 h-5 animate-spin" /> Enviando...</>
                                     ) : (
-                                        <>Enviar via WhatsApp <Send className="w-4 h-4" /></>
+                                        <><WhatsAppIcon className="w-4 h-4" /> Enviar via WhatsApp <Send className="w-4 h-4" /></>
                                     )}
                                 </button>
 

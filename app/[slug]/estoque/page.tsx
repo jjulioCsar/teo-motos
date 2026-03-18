@@ -26,15 +26,38 @@ export default function InventoryPage() {
     const [currentPage, setCurrentPage] = useState(0);
     const MOBILE_PAGE_SIZE = 4;
 
+    const [loadError, setLoadError] = useState(false);
+
     useEffect(() => {
         if (!slug) return;
+        let cancelled = false;
         async function loadInventory() {
-            const data = await inventoryService.getInventory(slug as string);
-            setInventory(data);
-            setFilteredInventory(data);
-            setLoading(false);
+            try {
+                setLoading(true);
+                setLoadError(false);
+                // Add timeout: if Supabase doesn't respond in 15s, show error
+                const timeoutPromise = new Promise<any[]>((_, reject) =>
+                    setTimeout(() => reject(new Error('timeout')), 15000)
+                );
+                const dataPromise = inventoryService.getInventory(slug as string);
+                const data = await Promise.race([dataPromise, timeoutPromise]);
+                if (!cancelled) {
+                    setInventory(data);
+                    setFilteredInventory(data);
+                }
+            } catch (err) {
+                console.error('Error loading inventory:', err);
+                if (!cancelled) {
+                    setLoadError(true);
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
         }
         loadInventory();
+        return () => { cancelled = true; };
     }, [slug]);
 
     useEffect(() => {
@@ -90,17 +113,39 @@ export default function InventoryPage() {
         );
     }
 
+    // Error state
+    if (loadError) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6">
+                <div className="w-20 h-20 bg-zinc-900/50 border border-white/5 rounded-2xl flex items-center justify-center text-zinc-700">
+                    <PackageOpen className="w-10 h-10" />
+                </div>
+                <div className="text-center">
+                    <h2 className="text-2xl font-black tracking-tighter uppercase italic mb-2">Erro ao carregar</h2>
+                    <p className="text-white/40 text-sm max-w-sm">Não foi possível carregar o estoque. Verifique sua conexão e tente novamente.</p>
+                </div>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3 rounded-xl bg-white text-black text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform"
+                >
+                    Tentar Novamente
+                </button>
+            </div>
+        );
+    }
+
     const MotoCard = ({ moto, compact = false }: { moto: any; compact?: boolean }) => (
         <Link
             href={`/${slug}/moto/${moto.slug || moto.id}`}
             className={`group relative rounded-2xl md:rounded-[2.5rem] overflow-hidden bg-zinc-900 border border-white/5 hover:border-white/20 transition-all cursor-pointer shadow-2xl block ${compact ? 'flex-shrink-0 w-[280px] snap-start' : ''}`}
         >
-            <div className={`relative ${compact ? 'aspect-[4/3]' : 'aspect-[4/3]'} overflow-hidden`}>
+            <div className={`relative ${compact ? 'aspect-[4/3]' : 'aspect-[4/3]'} overflow-hidden bg-zinc-800`}>
                 <img
-                    src={moto.image || 'https://images.unsplash.com/photo-1558981403-c5f91cbba527?q=80&w=2070'}
+                    src={moto.image || 'https://images.unsplash.com/photo-1558981403-c5f91cbba527?q=80&w=800'}
                     alt={moto.model}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     loading="lazy"
+                    decoding="async"
                 />
                 <div className="absolute top-4 left-4 z-20">
                     <span className="bg-black/50 backdrop-blur-xl text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/10">

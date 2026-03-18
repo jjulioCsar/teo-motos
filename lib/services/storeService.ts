@@ -83,14 +83,16 @@ export interface Motorcycle {
     is_featured?: boolean;
 }
 
-// Generate SEO-friendly slug from moto data
+// Generate SEO-friendly slug from moto data with unique suffix
 function generateMotoSlug(make: string, model: string, year: string): string {
     const base = `${make}-${model}-${year}`
         .toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
-    return base;
+    // Add short unique ID to prevent slug collisions (e.g. two Honda CG 160 2023)
+    const uid = Math.random().toString(36).substring(2, 6);
+    return `${base}-${uid}`;
 }
 
 // Helper to map DB to Frontend
