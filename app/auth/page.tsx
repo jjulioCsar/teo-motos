@@ -31,6 +31,9 @@ export default function AuthPage() {
 
         try {
             if (mode === 'signin') {
+                // Clear any stale session first to avoid hanging on re-login
+                await supabase.auth.signOut().catch(() => {});
+
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
                     password,

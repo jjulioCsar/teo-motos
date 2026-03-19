@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Phone, FileText, Loader2, DollarSign, Calendar, Wallet } from 'lucide-react';
+import { X, User, Phone, FileText, Loader2, DollarSign, Calendar, Wallet, Cake } from 'lucide-react';
 import { leadService } from '@/lib/services/storeService';
 import { useToast } from '@/lib/context/ToastContext';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
@@ -32,6 +32,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
     const [name, setName] = useState('');
     const [cpf, setCpf] = useState('');
     const [phone, setPhone] = useState('');
+    const [dataNascimento, setDataNascimento] = useState('');
     const [entrada, setEntrada] = useState('');
     const [parcelas, setParcelas] = useState('48');
     const [renda, setRenda] = useState('');
@@ -41,11 +42,24 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
     const entradaNum = Number(entrada.replace(/\D/g, '') || '0');
     const entryExceedsPrice = motorcycle.price > 0 && entradaNum > 0 && entradaNum >= motorcycle.price;
 
+    // Date of birth validation
+    const dobError = (() => {
+        if (!dataNascimento || dataNascimento.length < 10) return '';
+        const [d, m, y] = dataNascimento.split('/');
+        const dob = new Date(Number(y), Number(m) - 1, Number(d));
+        if (isNaN(dob.getTime())) return 'Data inválida';
+        const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+        if (age < 18) return 'Você precisa ter pelo menos 18 anos';
+        if (age > 120) return 'Data inválida';
+        return '';
+    })();
+
     useEffect(() => {
         if (isOpen) {
             setName('');
             setCpf('');
             setPhone('');
+            setDataNascimento('');
             setEntrada('');
             setParcelas('48');
             setRenda('');
@@ -54,9 +68,17 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
 
     const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+    // Date of birth mask
+    const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 8);
+        if (v.length >= 5) v = v.replace(/(\d{2})(\d{2})(\d)/, '$1/$2/$3');
+        else if (v.length >= 3) v = v.replace(/(\d{2})(\d)/, '$1/$2');
+        setDataNascimento(v);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (entryExceedsPrice) return;
+        if (entryExceedsPrice || dobError) return;
         setLoading(true);
 
         try {
@@ -77,6 +99,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
             const message = `*SOLICITACAO DE FINANCIAMENTO*\n\n` +
                 `*Nome:* ${name}\n` +
                 `*CPF:* ${cpf}\n` +
+                `*Data de Nascimento:* ${dataNascimento}\n` +
                 `*Telefone:* ${phone}\n\n` +
                 `*Moto de Interesse:* ${motorcycle.make} ${motorcycle.model}${motorcycle.year ? ` (${motorcycle.year})` : ''}\n` +
                 (motoLink ? `Link: ${motoLink}\n` : '') +
@@ -203,6 +226,24 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                                 </div>
                             </div>
 
+                            {/* Data de Nascimento */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Data de Nascimento *</label>
+                                <div className="relative">
+                                    <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                    <input
+                                        required
+                                        value={dataNascimento}
+                                        onChange={handleDobChange}
+                                        placeholder="DD/MM/AAAA"
+                                        className={`w-full bg-black/40 border rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none transition-colors ${dobError ? 'border-red-500 focus:border-red-500' : 'border-white/10 focus:border-white/30'}`}
+                                    />
+                                </div>
+                                {dobError && (
+                                    <p className="text-[10px] text-red-400 font-bold ml-1">{dobError}</p>
+                                )}
+                            </div>
+
                             {/* Entrada Disponível */}
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Entrada Disponível (R$)</label>
@@ -256,7 +297,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                             <div className="pt-2">
                                 <button
                                     type="submit"
-                                    disabled={!name || !cpf || !phone || loading || entryExceedsPrice}
+                                    disabled={!name || !cpf || !phone || !dataNascimento || loading || entryExceedsPrice || !!dobError}
                                     className="w-full py-4 rounded-xl font-black uppercase tracking-widest hover:brightness-110 transition-all text-white text-sm flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{ backgroundColor: '#25D366' }}
                                 >

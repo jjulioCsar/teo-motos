@@ -13,13 +13,15 @@ export default function GestaoRootRedirect() {
         let cancelled = false;
 
         const checkAndRedirect = async () => {
-            // Safety timeout
+            // Hard safety timeout — never spin forever
             const timeout = setTimeout(() => {
                 if (!cancelled) {
-                    setStatus('Tempo excedido. Redirecionando...');
+                    setStatus('Tempo excedido. Redirecionando para login...');
+                    setIsErrored(true);
+                    localStorage.removeItem('jl_admin_session');
                     window.location.replace('/auth');
                 }
-            }, 6000);
+            }, 5000);
 
             try {
                 if (!supabase) {
@@ -30,13 +32,43 @@ export default function GestaoRootRedirect() {
                     return;
                 }
 
-                const { data: { user }, error } = await supabase.auth.getUser();
+                // 1. Try getSession first (local, instant — no network call)
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+                if (cancelled) return;
+
+                if (sessionError || !sessionData?.session) {
+                    // No local session — go straight to login
+                    clearTimeout(timeout);
+                    setStatus('Nenhuma sessão encontrada. Redirecionando...');
+                    localStorage.removeItem('jl_admin_session');
+                    setTimeout(() => window.location.replace('/auth'), 800);
+                    return;
+                }
+
+                // 2. Session exists locally — try to validate with server (with its own timeout)
+                const userPromise = supabase.auth.getUser();
+                const raceTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+
+                const result = await Promise.race([userPromise, raceTimeout]);
 
                 if (cancelled) return;
                 clearTimeout(timeout);
 
+                // If the race timed out, the session is likely still valid (local session exists)
+                // Just redirect — the middleware will catch truly expired sessions
+                if (!result) {
+                    setStatus('Sessão válida! Redirecionando...');
+                    localStorage.setItem('jl_admin_session', 'true');
+                    window.location.replace('/teomotos?edit=true');
+                    return;
+                }
+
+                const { data: { user }, error } = result as Awaited<typeof userPromise>;
+
                 if (error || !user) {
                     setStatus('Sessão expirada. Faça login novamente.');
+                    setIsErrored(true);
                     localStorage.removeItem('jl_admin_session');
                     setTimeout(() => window.location.replace('/auth'), 1000);
                     return;
@@ -51,6 +83,7 @@ export default function GestaoRootRedirect() {
                 clearTimeout(timeout);
                 setStatus(`Erro: ${err.message || 'Falha na conexão'}`);
                 setIsErrored(true);
+                localStorage.removeItem('jl_admin_session');
                 setTimeout(() => window.location.replace('/auth'), 2000);
             }
         };

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
 import { inventoryService } from '@/lib/services/storeService';
 import { useParams } from 'next/navigation';
-import { Landmark, Calculator, Receipt, Clock, CheckCircle2, Send, User, FileText, Phone, Bike, DollarSign, Loader2, AlertTriangle } from 'lucide-react';
+import { Landmark, Calculator, Receipt, Clock, CheckCircle2, Send, User, FileText, Phone, Bike, DollarSign, Loader2, AlertTriangle, Cake } from 'lucide-react';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
@@ -24,6 +24,7 @@ export default function FinancingPage() {
         name: '',
         cpf: '',
         phone: '',
+        dataNascimento: '',
         motoInteresse: '',
         entrada: '',
         parcelas: '48',
@@ -53,11 +54,30 @@ export default function FinancingPage() {
         setFormData(p => ({ ...p, phone: v }));
     };
 
+    const handleDob = (val: string) => {
+        let v = val.replace(/\D/g, '').slice(0, 8);
+        if (v.length >= 5) v = v.replace(/(\d{2})(\d{2})(\d)/, '$1/$2/$3');
+        else if (v.length >= 3) v = v.replace(/(\d{2})(\d)/, '$1/$2');
+        setFormData(p => ({ ...p, dataNascimento: v }));
+    };
+
+    // Date of birth validation
+    const dobError = (() => {
+        if (!formData.dataNascimento || formData.dataNascimento.length < 10) return '';
+        const [d, m, y] = formData.dataNascimento.split('/');
+        const dob = new Date(Number(y), Number(m) - 1, Number(d));
+        if (isNaN(dob.getTime())) return 'Data inválida';
+        const age = Math.floor((Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+        if (age < 18) return 'Você precisa ter pelo menos 18 anos';
+        if (age > 120) return 'Data inválida';
+        return '';
+    })();
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         // Validate entry vs moto price
-        if (entryExceedsPrice) {
+        if (entryExceedsPrice || dobError) {
             return; // blocked by UI, but safety check
         }
 
@@ -70,6 +90,7 @@ export default function FinancingPage() {
         const message = `*SIMULACAO DE FINANCIAMENTO*\n\n` +
             `*Nome:* ${formData.name}\n` +
             `*CPF:* ${formData.cpf}\n` +
+            `*Data de Nascimento:* ${formData.dataNascimento}\n` +
             `*Telefone:* ${formData.phone}\n\n` +
             `*Moto de Interesse:* ${motoName}\n` +
             (motoLink ? `Link: ${motoLink}\n` : '') +
@@ -204,7 +225,7 @@ export default function FinancingPage() {
                                 <h3 className="text-xl font-black uppercase italic">Solicitação Enviada!</h3>
                                 <p className="text-white/40 text-sm">Nossa equipe entrará em contato em breve.</p>
                                 <button
-                                    onClick={() => { setSent(false); setFormData({ name: '', cpf: '', phone: '', motoInteresse: '', entrada: '', parcelas: '48', renda: '' }); }}
+                                    onClick={() => { setSent(false); setFormData({ name: '', cpf: '', phone: '', dataNascimento: '', motoInteresse: '', entrada: '', parcelas: '48', renda: '' }); }}
                                     className="text-xs font-bold text-white/40 underline hover:text-white transition-colors"
                                 >
                                     Enviar nova simulação
@@ -253,6 +274,24 @@ export default function FinancingPage() {
                                             />
                                         </div>
                                     </div>
+                                </div>
+
+                                {/* Data de Nascimento */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Data de Nascimento *</label>
+                                    <div className="relative">
+                                        <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                                        <input
+                                            required
+                                            value={formData.dataNascimento}
+                                            onChange={e => handleDob(e.target.value)}
+                                            placeholder="DD/MM/AAAA"
+                                            className={`w-full bg-black/40 border rounded-xl py-3 pl-10 pr-4 text-sm font-medium text-white outline-none transition-colors ${dobError ? 'border-red-500/60 focus:border-red-500' : 'border-white/10 focus:border-indigo-500'}`}
+                                        />
+                                    </div>
+                                    {dobError && (
+                                        <p className="text-[9px] text-red-400 font-bold mt-1 ml-1">{dobError}</p>
+                                    )}
                                 </div>
 
                                 <div>
@@ -323,7 +362,7 @@ export default function FinancingPage() {
 
                                 <button
                                     type="submit"
-                                    disabled={sending || entryExceedsPrice}
+                                    disabled={sending || entryExceedsPrice || !!dobError}
                                     className="w-full py-4 rounded-xl font-black uppercase tracking-widest text-white text-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                                     style={{ backgroundColor: '#25D366' }}
                                 >

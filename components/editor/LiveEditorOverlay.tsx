@@ -171,6 +171,8 @@ export default function LiveEditorOverlay() {
 
     const handleDeleteMoto = async (id: string | number) => {
         if (!theme.slug) return;
+        const confirmed = window.confirm('Tem certeza que deseja excluir esta moto? Essa ação não pode ser desfeita.');
+        if (!confirmed) return;
         try {
             await inventoryService.deleteMotorcycle(id.toString());
             const updated = await inventoryService.getInventory(theme.slug);
@@ -525,10 +527,10 @@ export default function LiveEditorOverlay() {
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <button onClick={() => handleEditMoto(moto)} className="p-2 text-zinc-600 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all">
+                                                        <button onClick={() => handleEditMoto(moto)} className="p-2 text-zinc-600 hover:text-indigo-400 md:opacity-0 md:group-hover:opacity-100 transition-all">
                                                             <Edit3 className="w-4 h-4" />
                                                         </button>
-                                                        <button onClick={() => handleDeleteMoto(moto.id)} className="p-2 text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                                                        <button onClick={() => handleDeleteMoto(moto.id)} className="p-2 text-zinc-600 hover:text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-all">
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
                                                     </div>
