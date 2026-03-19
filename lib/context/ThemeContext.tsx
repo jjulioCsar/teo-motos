@@ -86,7 +86,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     // Robust fetch by slug that can be triggered explicitly
     const setThemeBySlug = React.useCallback(async (targetSlug: string) => {
-        if (!targetSlug || targetSlug === 'default' || targetSlug === theme.slug) return;
+        if (!targetSlug || targetSlug === 'default') return;
 
         try {
             const store = await storeService.getStoreBySlug(targetSlug);
@@ -97,7 +97,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             if (error.name === 'AbortError') return;
             console.error("Erro ao sincronizar tema por slug:", error);
         }
-    }, [theme.slug]);
+    }, []);
 
     // Load initial edit mode
     useEffect(() => {
@@ -166,11 +166,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const updateTheme = React.useCallback(async (newTheme: Partial<Store>) => {
         setTheme((prev) => {
             const updated = { ...prev, ...newTheme };
-            // Fire and forget to Supabase (or handle error if preferred)
-            storeService.saveStore(theme.slug || 'default', newTheme).catch(console.error);
+            // Use prev.slug (always up-to-date) instead of theme.slug (can be stale closure)
+            storeService.saveStore(prev.slug || 'default', newTheme).catch(console.error);
             return updated;
         });
-    }, [theme.slug]);
+    }, []);
 
     const contextValue = useMemo(() => ({
         theme,

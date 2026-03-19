@@ -29,15 +29,30 @@ export default function AuthPage() {
             return;
         }
 
+        // Safety timeout — if auth takes more than 10 seconds, something is wrong
+        const safetyTimeout = setTimeout(() => {
+            setIsLoading(false);
+            setError('A conexão demorou demais. Tente novamente.');
+        }, 10000);
+
         try {
             if (mode === 'signin') {
-                // Clear any stale session first to avoid hanging on re-login
-                await supabase.auth.signOut().catch(() => {});
+                // FORCE clear all Supabase tokens from localStorage to avoid stale sessions
+                // This is the root cause of the infinite "Processando..." bug
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('sb-') || key.includes('supabase')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                localStorage.removeItem('jl_admin_session');
 
+                // Now sign in fresh
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email,
                     password,
                 });
+
+                clearTimeout(safetyTimeout);
 
                 if (error) {
                     if (error.message.includes('Invalid login credentials')) {
@@ -73,6 +88,8 @@ export default function AuthPage() {
                     },
                 });
 
+                clearTimeout(safetyTimeout);
+
                 if (error) throw error;
 
                 if (data.session) {
@@ -85,6 +102,7 @@ export default function AuthPage() {
                 }
             }
         } catch (err: any) {
+            clearTimeout(safetyTimeout);
             console.error("Auth error:", err);
             setError(err.message === 'Invalid login credentials' ? 'Email ou senha incorretos.' : err.message || 'Ocorreu um erro.');
         } finally {
