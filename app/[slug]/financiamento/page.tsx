@@ -29,6 +29,7 @@ export default function FinancingPage() {
         entrada: '',
         parcelas: '48',
         renda: '',
+        possuiCnh: '',
     });
     const [sending, setSending] = useState(false);
     const [sent, setSent] = useState(false);
@@ -96,7 +97,8 @@ export default function FinancingPage() {
             (motoLink ? `Link: ${motoLink}\n` : '') +
             `*Entrada Disponivel:* R$ ${formData.entrada || '0'}\n` +
             `*Parcelas Desejadas:* ${formData.parcelas}x\n` +
-            `*Renda Mensal:* R$ ${formData.renda || 'Nao informado'}\n\n` +
+            `*Renda Mensal:* R$ ${formData.renda || 'Nao informado'}\n` +
+            `*Possui CNH:* ${formData.possuiCnh === 'sim' ? 'Sim' : 'Nao'}\n\n` +
             `_Solicitacao enviada pelo site ${theme.name}_`;
 
         const url = buildWhatsAppUrl(message);
@@ -225,7 +227,7 @@ export default function FinancingPage() {
                                 <h3 className="text-xl font-black uppercase italic">Solicitação Enviada!</h3>
                                 <p className="text-white/40 text-sm">Nossa equipe entrará em contato em breve.</p>
                                 <button
-                                    onClick={() => { setSent(false); setFormData({ name: '', cpf: '', phone: '', dataNascimento: '', motoInteresse: '', entrada: '', parcelas: '48', renda: '' }); }}
+                                    onClick={() => { setSent(false); setFormData({ name: '', cpf: '', phone: '', dataNascimento: '', motoInteresse: '', entrada: '', parcelas: '48', renda: '', possuiCnh: '' }); }}
                                     className="text-xs font-bold text-white/40 underline hover:text-white transition-colors"
                                 >
                                     Enviar nova simulação
@@ -360,9 +362,38 @@ export default function FinancingPage() {
                                     </div>
                                 </div>
 
+                                {/* Possui CNH */}
+                                <div>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1 mb-1 block">Possui CNH? *</label>
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(p => ({ ...p, possuiCnh: 'sim' }))}
+                                            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all border ${
+                                                formData.possuiCnh === 'sim'
+                                                    ? 'bg-green-500/20 border-green-500/50 text-green-400'
+                                                    : 'bg-black/40 border-white/10 text-white/50 hover:border-white/30'
+                                            }`}
+                                        >
+                                            Sim
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(p => ({ ...p, possuiCnh: 'nao' }))}
+                                            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all border ${
+                                                formData.possuiCnh === 'nao'
+                                                    ? 'bg-red-500/20 border-red-500/50 text-red-400'
+                                                    : 'bg-black/40 border-white/10 text-white/50 hover:border-white/30'
+                                            }`}
+                                        >
+                                            Não
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <button
                                     type="submit"
-                                    disabled={sending || entryExceedsPrice || !!dobError}
+                                    disabled={sending || entryExceedsPrice || !!dobError || !formData.possuiCnh}
                                     className="w-full py-4 rounded-xl font-black uppercase tracking-widest text-white text-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                                     style={{ backgroundColor: '#25D366' }}
                                 >

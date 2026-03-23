@@ -36,6 +36,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
     const [entrada, setEntrada] = useState('');
     const [parcelas, setParcelas] = useState('48');
     const [renda, setRenda] = useState('');
+    const [possuiCnh, setPossuiCnh] = useState('');
     const [loading, setLoading] = useState(false);
 
     // Validation
@@ -63,6 +64,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
             setEntrada('');
             setParcelas('48');
             setRenda('');
+            setPossuiCnh('');
         }
     }, [isOpen]);
 
@@ -105,7 +107,8 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                 (motoLink ? `Link: ${motoLink}\n` : '') +
                 `*Entrada Disponivel:* R$ ${entrada || '0'}\n` +
                 `*Parcelas Desejadas:* ${parcelas}x\n` +
-                `*Renda Mensal:* R$ ${renda || 'Nao informado'}\n\n` +
+                `*Renda Mensal:* R$ ${renda || 'Nao informado'}\n` +
+                `*Possui CNH:* ${possuiCnh === 'sim' ? 'Sim' : 'Nao'}\n\n` +
                 `_Solicitacao enviada pelo site_`;
 
             const url = buildWhatsAppUrl(message);
@@ -293,11 +296,40 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                                 </div>
                             </div>
 
+                            {/* Possui CNH */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Possui CNH? *</label>
+                                <div className="flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPossuiCnh('sim')}
+                                        className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all border ${
+                                            possuiCnh === 'sim'
+                                                ? 'bg-green-500/20 border-green-500/50 text-green-400'
+                                                : 'bg-black/40 border-white/10 text-white/50 hover:border-white/30'
+                                        }`}
+                                    >
+                                        Sim
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPossuiCnh('nao')}
+                                        className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all border ${
+                                            possuiCnh === 'nao'
+                                                ? 'bg-red-500/20 border-red-500/50 text-red-400'
+                                                : 'bg-black/40 border-white/10 text-white/50 hover:border-white/30'
+                                        }`}
+                                    >
+                                        Não
+                                    </button>
+                                </div>
+                            </div>
+
                             {/* Submit */}
                             <div className="pt-2">
                                 <button
                                     type="submit"
-                                    disabled={!name || !cpf || !phone || !dataNascimento || loading || entryExceedsPrice || !!dobError}
+                                    disabled={!name || !cpf || !phone || !dataNascimento || !possuiCnh || loading || entryExceedsPrice || !!dobError}
                                     className="w-full py-4 rounded-xl font-black uppercase tracking-widest hover:brightness-110 transition-all text-white text-sm flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
                                     style={{ backgroundColor: '#25D366' }}
                                 >
