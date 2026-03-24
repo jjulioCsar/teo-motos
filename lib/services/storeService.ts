@@ -407,30 +407,27 @@ export const storeService = {
     },
 
     uploadImage: async (file: File): Promise<string | null> => {
-        if (!supabase) return null;
-
         try {
             // Compress image before upload (handles large phone photos)
             const compressed = await compressImage(file);
-            
-            const fileExt = compressed.name.split('.').pop() || 'webp';
-            const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
 
-            const { data, error } = await supabase.storage
-                .from('images')
-                .upload(filePath, compressed, {
-                    contentType: compressed.type,
-                    cacheControl: '31536000', // 1 year cache
-                });
+            // Upload to Cloudinary (unsigned preset — no API keys needed client-side)
+            const formData = new FormData();
+            formData.append('file', compressed);
+            formData.append('upload_preset', 'teomotos');
+            formData.append('folder', 'teomotos');
 
-            if (error) throw error;
+            const response = await fetch(
+                'https://api.cloudinary.com/v1_1/dxrwabuvg/image/upload',
+                { method: 'POST', body: formData }
+            );
 
-            const { data: { publicUrl } } = supabase.storage
-                .from('images')
-                .getPublicUrl(filePath);
+            if (!response.ok) {
+                throw new Error(`Cloudinary upload failed: ${response.status}`);
+            }
 
-            return publicUrl;
+            const data = await response.json();
+            return data.secure_url;
         } catch (err) {
             console.error('Error in uploadImage:', err);
             throw err;
