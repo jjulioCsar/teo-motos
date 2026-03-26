@@ -27,17 +27,25 @@ export async function GET() {
     for (const moto of motos || []) {
         if (!moto.images || !Array.isArray(moto.images)) continue;
 
-        let hasCloudinaryUrl = false;
+        let needsUpdate = false;
         const fixedImages = moto.images.map((url: string) => {
-            // Only fix Cloudinary URLs that DON'T already have f_auto,q_auto
-            if (url.includes('res.cloudinary.com') && !url.includes('f_auto')) {
-                hasCloudinaryUrl = true;
-                return url.replace('/upload/', '/upload/f_auto,q_auto/');
+            if (!url.includes('res.cloudinary.com')) return url;
+            
+            let fixed = url;
+            // Add f_auto,q_auto if missing
+            if (!fixed.includes('f_auto')) {
+                fixed = fixed.replace('/upload/', '/upload/f_auto,q_auto/');
             }
-            return url;
+            // Replace .heic extension with .jpg
+            if (fixed.endsWith('.heic') || fixed.endsWith('.HEIC')) {
+                fixed = fixed.replace(/\.heic$/i, '.jpg');
+            }
+            
+            if (fixed !== url) needsUpdate = true;
+            return fixed;
         });
 
-        if (hasCloudinaryUrl) {
+        if (needsUpdate) {
             const { error: updateError } = await supabase
                 .from('motorcycles')
                 .update({ images: fixedImages })

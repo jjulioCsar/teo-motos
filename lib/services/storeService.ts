@@ -416,6 +416,8 @@ export const storeService = {
             formData.append('file', compressed);
             formData.append('upload_preset', 'teomotos');
             formData.append('folder', 'teomotos');
+            // Force server-side format conversion (fixes HEIC from iPhones)
+            formData.append('format', 'jpg');
 
             const response = await fetch(
                 'https://api.cloudinary.com/v1_1/dxrwabuvg/image/upload',
@@ -428,9 +430,8 @@ export const storeService = {
 
             const data = await response.json();
             
-            // Insert f_auto,q_auto transformation into the URL
-            // This makes Cloudinary auto-convert HEIC/PNG to WebP/JPEG on delivery
-            // URL format: .../upload/v123/folder/file.heic → .../upload/f_auto,q_auto/v123/folder/file.heic
+            // Insert f_auto,q_auto transformation into the URL for optimal delivery
+            // Cloudinary will serve WebP to modern browsers, JPEG to older ones
             const url = (data.secure_url as string).replace(
                 '/upload/',
                 '/upload/f_auto,q_auto/'
