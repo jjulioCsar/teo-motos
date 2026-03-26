@@ -427,7 +427,15 @@ export const storeService = {
             }
 
             const data = await response.json();
-            return data.secure_url;
+            
+            // Insert f_auto,q_auto transformation into the URL
+            // This makes Cloudinary auto-convert HEIC/PNG to WebP/JPEG on delivery
+            // URL format: .../upload/v123/folder/file.heic → .../upload/f_auto,q_auto/v123/folder/file.heic
+            const url = (data.secure_url as string).replace(
+                '/upload/',
+                '/upload/f_auto,q_auto/'
+            );
+            return url;
         } catch (err) {
             console.error('Error in uploadImage:', err);
             throw err;
