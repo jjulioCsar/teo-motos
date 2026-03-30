@@ -25,6 +25,7 @@ import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import Image from 'next/image';
 import FinancingModal from '@/components/FinancingModal';
 import { trackViewContent, trackContact, trackInitiateCheckout } from '@/lib/meta-pixel';
+import { cloudinarySizes, optimizeCloudinaryUrl } from '@/lib/cloudinary';
 
 export default function MotorcycleDetailsPage() {
     const { slug, id } = useParams();
@@ -117,7 +118,7 @@ export default function MotorcycleDetailsPage() {
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.5 }}
-                                src={images[activeImage] || 'https://images.unsplash.com/photo-1558981403-c5f91cbba527?q=80&w=2070'}
+                                src={cloudinarySizes.detail(images[activeImage]) || 'https://images.unsplash.com/photo-1558981403-c5f91cbba527?q=80&w=2070'}
                                 className="w-full h-auto max-h-[70vh] object-contain bg-zinc-950"
                             />
                         </AnimatePresence>
@@ -153,7 +154,7 @@ export default function MotorcycleDetailsPage() {
                                     className={`relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${activeImage === i ? 'scale-95' : 'border-transparent opacity-50 hover:opacity-100'}`}
                                     style={activeImage === i ? { borderColor: theme.primaryColor } : {}}
                                 >
-                                    <img src={img} className="w-full h-full object-cover" loading="lazy" />
+                                    <img src={cloudinarySizes.thumbnail(img)} className="w-full h-full object-cover" loading="lazy" />
                                 </button>
                             ))}
                         </div>

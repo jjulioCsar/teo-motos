@@ -7,6 +7,7 @@ import { inventoryService } from '@/lib/services/storeService';
 import { PackageOpen, ArrowRight, ShieldCheck, Landmark, Truck } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { cloudinarySizes } from '@/lib/cloudinary';
 
 export default function StorePage() {
     const params = useParams();
@@ -162,7 +163,7 @@ export default function StorePage() {
                             >
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
                                 <img
-                                    src={moto.image || `https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=2070`}
+                                    src={cloudinarySizes.card(moto.image) || `https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?q=80&w=2070`}
                                     alt={moto.model}
                                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                                     loading="lazy"

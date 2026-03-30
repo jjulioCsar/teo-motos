@@ -7,6 +7,7 @@ import { inventoryService } from '@/lib/services/storeService';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { cloudinarySizes } from '@/lib/cloudinary';
 
 export default function InventoryPage() {
     const { slug } = useParams();
@@ -141,7 +142,7 @@ export default function InventoryPage() {
         >
             <div className={`relative ${compact ? 'aspect-[4/3]' : 'aspect-[4/3]'} overflow-hidden bg-zinc-800`}>
                 <img
-                    src={moto.image || 'https://images.unsplash.com/photo-1558981403-c5f91cbba527?q=80&w=800'}
+                    src={cloudinarySizes.card(moto.image) || 'https://images.unsplash.com/photo-1558981403-c5f91cbba527?q=80&w=800'}
                     alt={moto.model}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     loading="lazy"

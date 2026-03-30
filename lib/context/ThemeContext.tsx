@@ -25,7 +25,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         return {
             slug: slug || 'teomotos',
             name: 'TEOMOTOS',
-            logo: 'https://litzlvhlmaqcgszkwbdz.supabase.co/storage/v1/object/public/images/gdfa7647khi_1770915739568.png',
+            logo: 'https://res.cloudinary.com/dxrwabuvg/image/upload/f_auto,q_auto/v1774877558/teomotos/site/logo.png',
             primaryColor: '#fec806',
             secondaryColor: '#ffc800',
             tertiaryColor: '#ffc800',
@@ -38,7 +38,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             aboutImage: '',
             heroTitle: 'sua proxima moto esta na teo motos',
             heroSubTitle: '',
-            heroImage: 'https://litzlvhlmaqcgszkwbdz.supabase.co/storage/v1/object/public/images/53ox8xv53h_1770915631908.jpeg',
+            heroImage: 'https://res.cloudinary.com/dxrwabuvg/image/upload/f_auto,q_auto/v1774877559/teomotos/site/hero_image.jpg',
             mapUrl: 'https://maps.google.com/maps?q=TEOMOTOS%20-%20Salvador%20lyra%20-%20R.%20Des.%20Carlos%20de%20Gusm%C3%A3o%20-%20Antares%2C%20Macei%C3%B3%20-%20A&t=&z=16&ie=UTF8&iwloc=&output=embed',
             instagram: 'https://www.instagram.com/teomotos1/',
             facebook: '',
@@ -66,9 +66,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
             aboutTeaserText: 'Referência em motocicletas.',
             financingTitle: 'Simule Agora',
             financingSubtitle: 'É rápido e fácil',
-            financingHeroImage: 'https://litzlvhlmaqcgszkwbdz.supabase.co/storage/v1/object/public/images/nu7llieeuqg_1771521616043.jpg',
+            financingHeroImage: 'https://res.cloudinary.com/dxrwabuvg/image/upload/f_auto,q_auto/v1774877561/teomotos/site/financing_hero.jpg',
             financingMainTitle: 'Seu sonho mais perto',
-            financingSecondaryImage: 'https://litzlvhlmaqcgszkwbdz.supabase.co/storage/v1/object/public/images/e2qqprivsyr_1771521631253.jpg',
+            financingSecondaryImage: 'https://res.cloudinary.com/dxrwabuvg/image/upload/f_auto,q_auto/v1774877562/teomotos/site/financing_secondary.jpg',
         };
     });
 
