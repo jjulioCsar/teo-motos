@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageCircle, CheckCircle, Smartphone } from 'lucide-react';
 import { useStoreTheme } from '@/lib/context/ThemeContext';
 import { leadService } from '@/lib/services/storeService';
+import { trackLead } from '@/lib/meta-pixel';
 
 interface FinancingModalProps {
     isOpen: boolean;
@@ -62,6 +63,15 @@ export default function FinancingModal({ isOpen, onClose, moto }: FinancingModal
                 phone: formData.phone,
                 motorcycleId: moto.id,
                 source: "Simulação Financiamento"
+            });
+
+            // 📊 Meta Pixel — Lead
+            const price = Number(String(moto.price).replace(/\D/g, ''));
+            trackLead({
+                content_name: `Financiamento - ${moto.make} ${moto.model}`,
+                content_category: 'Financiamento',
+                value: price,
+                currency: 'BRL',
             });
 
             // 3. Redirect

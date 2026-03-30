@@ -24,6 +24,7 @@ import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import Image from 'next/image';
 import FinancingModal from '@/components/FinancingModal';
+import { trackViewContent, trackContact, trackInitiateCheckout } from '@/lib/meta-pixel';
 
 export default function MotorcycleDetailsPage() {
     const { slug, id } = useParams();
@@ -47,6 +48,18 @@ export default function MotorcycleDetailsPage() {
                     data = await inventoryService.getMotorcycleById(idStr);
                 }
                 setMoto(data);
+
+                // 📊 Meta Pixel — ViewContent
+                if (data) {
+                    const price = Number(String(data.price).replace(/\D/g, ''));
+                    trackViewContent({
+                        content_name: `${data.make} ${data.model}`,
+                        content_ids: [data.id],
+                        content_type: 'product',
+                        value: price,
+                        currency: 'BRL',
+                    });
+                }
             } catch (error) {
                 console.error("Error loading motorcycle:", error);
             } finally {
@@ -215,6 +228,8 @@ export default function MotorcycleDetailsPage() {
                         <div className="space-y-3">
                             <button
                                 onClick={() => {
+                                    // 📊 Meta Pixel — Contact
+                                    trackContact({ content_name: `WhatsApp - ${moto.make} ${moto.model}` });
                                     const message = `Ola, tenho interesse na ${moto.make} ${moto.model} anunciada no site.\n\nLink: ${typeof window !== 'undefined' ? window.location.href : ''}`;
                                     const url = buildWhatsAppUrl(message);
                                     window.open(url, '_blank');
@@ -224,7 +239,17 @@ export default function MotorcycleDetailsPage() {
                                 <WhatsAppIcon className="w-5 h-5" /> Quero Proposta
                             </button>
                             <button
-                                onClick={() => setIsFinancingModalOpen(true)}
+                                onClick={() => {
+                                    // 📊 Meta Pixel — InitiateCheckout
+                                    const price = Number(String(moto.price).replace(/\D/g, ''));
+                                    trackInitiateCheckout({
+                                        content_name: `${moto.make} ${moto.model}`,
+                                        content_ids: [moto.id],
+                                        value: price,
+                                        currency: 'BRL',
+                                    });
+                                    setIsFinancingModalOpen(true);
+                                }}
                                 className="w-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 py-4 rounded-2xl font-black text-lg hover:bg-indigo-500/20 transition-all flex items-center justify-center gap-2"
                                 style={{ color: theme.primaryColor, borderColor: `${theme.primaryColor}20`, backgroundColor: `${theme.primaryColor}10` }}
                             >

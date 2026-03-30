@@ -6,6 +6,7 @@ import { useStoreTheme } from '@/lib/context/ThemeContext';
 import { Mail, MapPin, Clock, Instagram } from 'lucide-react';
 import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
+import { trackContact } from '@/lib/meta-pixel';
 
 export default function ContactPage() {
     const { theme } = useStoreTheme();
@@ -53,6 +54,8 @@ export default function ContactPage() {
                                 {/* WhatsApp Button */}
                                 <motion.button
                                     onClick={() => {
+                                        // 📊 Meta Pixel — Contact
+                                        trackContact({ content_name: 'WhatsApp - Página Contato' });
                                         const url = buildWhatsAppUrl(theme.whatsappMessage || '');
                                         window.open(url, '_blank');
                                     }}

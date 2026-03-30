@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 import { ThemeProvider } from "@/lib/context/ThemeContext";
 import { ToastProvider } from "@/lib/context/ToastContext";
 
-const META_PIXEL_ID = "1744584863585766";
+const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1744584863585766";
 
 export default function RootLayout({
   children,
