@@ -416,8 +416,9 @@ export const storeService = {
             formData.append('file', compressed);
             formData.append('upload_preset', 'teomotos');
             formData.append('folder', 'teomotos');
-            // Force server-side format conversion (fixes HEIC from iPhones)
-            formData.append('format', 'jpg');
+            // Note: 'format' param is NOT allowed with unsigned uploads.
+            // HEIC from iPhones is handled by the client-side compressor (converts to WebP)
+            // and Cloudinary's f_auto serves optimal format to each browser.
 
             const response = await fetch(
                 'https://api.cloudinary.com/v1_1/dxrwabuvg/image/upload',

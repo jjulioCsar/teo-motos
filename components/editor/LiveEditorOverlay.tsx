@@ -1199,10 +1199,14 @@ export default function LiveEditorOverlay() {
                                                 className="hidden"
                                                 onChange={async (e) => {
                                                     const files = Array.from(e.target.files || []);
+                                                    if (files.length === 0) return;
+                                                    addToast(`Enviando ${files.length} imagem(ns)...`, 'info');
+                                                    let successCount = 0;
                                                     for (const file of files) {
                                                         try {
                                                             const url = await storeService.uploadImage(file);
                                                             if (url) {
+                                                                successCount++;
                                                                 setNewMoto(prev => {
                                                                     const newImages = [...(prev.images || []), url];
                                                                     return {
@@ -1214,8 +1218,14 @@ export default function LiveEditorOverlay() {
                                                             }
                                                         } catch (err) {
                                                             console.error('Upload failed for file:', file.name, err);
+                                                            addToast(`Erro ao enviar ${file.name}`, 'error');
                                                         }
                                                     }
+                                                    if (successCount > 0) {
+                                                        addToast(`${successCount} imagem(ns) enviada(s)!`, 'success');
+                                                    }
+                                                    // Reset the input so the same file can be re-selected
+                                                    e.target.value = '';
                                                 }}
                                             />
                                             {/* Camera file input (capture=environment opens camera on mobile) */}
@@ -1228,6 +1238,7 @@ export default function LiveEditorOverlay() {
                                                 onChange={async (e) => {
                                                     const file = e.target.files?.[0];
                                                     if (file) {
+                                                        addToast('Enviando foto...', 'info');
                                                         try {
                                                             const url = await storeService.uploadImage(file);
                                                             if (url) {
@@ -1239,10 +1250,13 @@ export default function LiveEditorOverlay() {
                                                                         image: prev.image || newImages[0]
                                                                     };
                                                                 });
+                                                                addToast('Foto enviada!', 'success');
                                                             }
                                                         } catch (err) {
                                                             console.error('Camera upload failed:', err);
+                                                            addToast('Erro ao enviar foto da câmera', 'error');
                                                         }
+                                                        e.target.value = '';
                                                     }
                                                 }}
                                             />
