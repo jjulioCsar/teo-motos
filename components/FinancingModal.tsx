@@ -109,9 +109,8 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                 `*Possui CNH:* ${possuiCnh === 'sim' ? 'Sim' : 'Nao'}\n\n` +
                 `_Solicitacao enviada pelo site_`;
 
-            // 3. Build WhatsApp URL — use the store's number if provided, otherwise use session number
-            const phone_wa = whatsappNumber || getSessionWhatsAppNumber();
-            const url = `https://wa.me/${phone_wa}?text=${encodeURIComponent(message)}`;
+            // 3. Build WhatsApp URL — always use the session seller numbers (hardcoded, validated format)
+            const url = `https://wa.me/${getSessionWhatsAppNumber()}?text=${encodeURIComponent(message)}`;
 
             // 4. Open WhatsApp IMMEDIATELY (before async calls to avoid popup blockers)
             window.open(url, '_blank');
