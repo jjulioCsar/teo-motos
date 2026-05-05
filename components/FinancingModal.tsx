@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Phone, FileText, Loader2, DollarSign, Calendar, Wallet, Cake } from 'lucide-react';
 import { leadService } from '@/lib/services/storeService';
 import { useToast } from '@/lib/context/ToastContext';
-import { buildWhatsAppUrl } from '@/lib/whatsapp';
+import { getSessionWhatsAppNumber } from '@/lib/whatsapp';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
 interface FinancingModalProps {
@@ -16,7 +16,7 @@ interface FinancingModalProps {
         make: string;
         model: string;
         year?: string;
-        price: number;
+        price: number | string;
         slug?: string;
         image?: string;
     };
@@ -39,9 +39,12 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
     const [possuiCnh, setPossuiCnh] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Validation
+    // Validation — normalize price to number (comes as string from DB)
+    const motoPrice = typeof motorcycle.price === 'string'
+        ? Number(String(motorcycle.price).replace(/\D/g, ''))
+        : motorcycle.price;
     const entradaNum = Number(entrada.replace(/\D/g, '') || '0');
-    const entryExceedsPrice = motorcycle.price > 0 && entradaNum > 0 && entradaNum >= motorcycle.price;
+    const entryExceedsPrice = motoPrice > 0 && entradaNum > 0 && entradaNum >= motoPrice;
 
     // Date of birth validation
     const dobError = (() => {
@@ -68,7 +71,10 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
         }
     }, [isOpen]);
 
-    const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const formatCurrency = (val: number | string) => {
+        const num = typeof val === 'string' ? Number(String(val).replace(/\D/g, '')) : val;
+        return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    };
 
     // Date of birth mask
     const handleDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,20 +90,12 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
         setLoading(true);
 
         try {
-            // 1. Save Lead
-            await leadService.createLead(storeSlug, {
-                name,
-                phone: phone.replace(/\D/g, ''),
-                motorcycleId: String(motorcycle.id),
-                source: 'financing_modal'
-            });
-
-            // 2. Build moto link
+            // 1. Build moto link FIRST (before any async that might delay window.open)
             const motoLink = typeof window !== 'undefined'
                 ? `${window.location.origin}/${storeSlug}/moto/${motorcycle.slug || motorcycle.id}`
                 : '';
 
-            // 3. Format WhatsApp Message — same format as financing page
+            // 2. Format WhatsApp Message
             const message = `*SOLICITACAO DE FINANCIAMENTO*\n\n` +
                 `*Nome:* ${name}\n` +
                 `*CPF:* ${cpf}\n` +
@@ -111,12 +109,22 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                 `*Possui CNH:* ${possuiCnh === 'sim' ? 'Sim' : 'Nao'}\n\n` +
                 `_Solicitacao enviada pelo site_`;
 
-            const url = buildWhatsAppUrl(message);
+            // 3. Build WhatsApp URL — use the store's number if provided, otherwise use session number
+            const phone_wa = whatsappNumber || getSessionWhatsAppNumber();
+            const url = `https://wa.me/${phone_wa}?text=${encodeURIComponent(message)}`;
 
-            // 4. Redirect
+            // 4. Open WhatsApp IMMEDIATELY (before async calls to avoid popup blockers)
             window.open(url, '_blank');
             onClose();
             addToast('Solicitação enviada! Aguarde nosso retorno.', 'success');
+
+            // 5. Save Lead in background (non-blocking — don't let this fail prevent the WhatsApp redirect)
+            leadService.createLead(storeSlug, {
+                name,
+                phone: phone.replace(/\D/g, ''),
+                motorcycleId: String(motorcycle.id),
+                source: 'financing_modal'
+            }).catch(err => console.error('Lead save failed (non-blocking):', err));
 
         } catch (error) {
             console.error(error);
@@ -170,7 +178,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-black uppercase italic tracking-tighter text-white">Solicitar Financiamento</h2>
-                                    <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">{motorcycle.make} {motorcycle.model} — {formatCurrency(motorcycle.price)}</p>
+                                    <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">{motorcycle.make} {motorcycle.model} — {formatCurrency(motoPrice)}</p>
                                 </div>
                             </div>
                             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/50 hover:text-white">
@@ -260,7 +268,7 @@ export default function FinancingModal({ isOpen, onClose, motorcycle, storeSlug,
                                     />
                                 </div>
                                 {entryExceedsPrice && (
-                                    <p className="text-[10px] text-red-400 font-bold ml-1">A entrada não pode ser maior que o valor da moto ({formatCurrency(motorcycle.price)})</p>
+                                    <p className="text-[10px] text-red-400 font-bold ml-1">A entrada não pode ser maior que o valor da moto ({formatCurrency(motoPrice)})</p>
                                 )}
                             </div>
 
