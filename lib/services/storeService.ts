@@ -150,6 +150,36 @@ function sessionInvalidate(pattern: string): void {
         }
     } catch { /* ignore */ }
 }
+
+// =============================================
+// AUTH GUARD — ensures session is valid before write operations
+// Prevents silent failures on mobile where sessions expire
+// =============================================
+async function ensureAuth(): Promise<void> {
+    if (!supabase) throw new Error('Conexão indisponível. Recarregue a página.');
+    try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data.session) {
+            // Try to refresh
+            const { error: refreshError } = await supabase.auth.refreshSession();
+            if (refreshError) {
+                throw new Error('Sessão expirada. Faça login novamente.');
+            }
+        }
+    } catch (err: any) {
+        if (err.message?.includes('Sessão expirada')) throw err;
+        throw new Error('Erro de autenticação. Faça login novamente.');
+    }
+}
+
+function invalidateAllCaches() {
+    cacheInvalidate('inventory_');
+    cacheInvalidate('moto_');
+    cacheInvalidate('store_');
+    sessionInvalidate('inventory_');
+    sessionInvalidate('moto_');
+    sessionInvalidate('store_');
+}
 // =============================================
 
 // Generate SEO-friendly slug from moto data with unique suffix
@@ -355,15 +385,12 @@ export const storeService = {
     },
 
     saveStore: async (slug: string, store: Partial<Store>) => {
+        await ensureAuth();
         try {
-            if (!supabase) {
-                console.error("Supabase client not initialized in saveStore");
-                return;
-            }
+            if (!supabase) throw new Error('Conexão indisponível.');
 
             // Invalidate store caches on save
-            cacheInvalidate('store_');
-            sessionInvalidate('store_');
+            invalidateAllCaches();
 
             // Fetch existing store to get name if not provided (for partial updates)
             let currentName = store.name;
@@ -388,18 +415,18 @@ export const storeService = {
                 Object.entries(rawData).filter(([_, v]) => v !== undefined)
             );
 
-            console.log("Payload to Supabase:", dbData);
-
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('stores')
-                .upsert(dbData, { onConflict: 'slug' });
+                .upsert(dbData, { onConflict: 'slug' })
+                .select();
 
             if (error) {
                 console.error('Supabase Upsert Error:', JSON.stringify(error, null, 2));
-                throw error;
+                throw new Error('Erro ao salvar configurações. Tente novamente.');
             }
-
-            console.log("Store saved successfully!");
+            if (!data || data.length === 0) {
+                throw new Error('Configurações não foram salvas. Faça login novamente.');
+            }
         } catch (err) {
             console.error("Unexpected error in saveStore:", err);
             throw err;
@@ -588,12 +615,10 @@ export const inventoryService = {
     },
 
     addMotorcycle: async (storeSlug: string, moto: Omit<Motorcycle, 'id'>) => {
-        if (!supabase) return;
+        await ensureAuth();
+        if (!supabase) throw new Error('Conexão indisponível.');
 
-        // Invalidate inventory cache
-        cacheInvalidate('inventory_');
-        cacheInvalidate('moto_');
-        sessionInvalidate('inventory_');
+        invalidateAllCaches();
 
         try {
             const { data: store, error: storeError } = await supabase
@@ -603,11 +628,10 @@ export const inventoryService = {
                 .maybeSingle();
 
             if (storeError || !store) {
-                console.error('Store not found for inventory addition:', storeSlug);
-                return;
+                throw new Error('Loja não encontrada. Recarregue a página.');
             }
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('motorcycles')
                 .insert({
                     store_id: store.id,
@@ -625,25 +649,27 @@ export const inventoryService = {
                     has_warranty: moto.hasWarranty,
                     slug: generateMotoSlug(moto.make, moto.model, moto.year),
                     is_featured: moto.is_featured ?? false
-                });
+                })
+                .select();
 
             if (error) {
-                console.error('Error adding motorcycle:', error);
-                throw error;
+                throw new Error('Erro ao adicionar moto. Faça login novamente.');
+            }
+            if (!data || data.length === 0) {
+                throw new Error('Moto não foi adicionada. Faça login novamente.');
             }
         } catch (err) {
-            console.error('Unexpected error in addMotorcycle:', err);
+            console.error('addMotorcycle error:', err);
             throw err;
         }
     },
 
     updateMotorcycle: async (id: string, moto: Partial<Motorcycle>) => {
-        if (!supabase) return;
+        await ensureAuth();
+        if (!supabase) throw new Error('Conexão indisponível.');
 
-        // Invalidate caches
-        cacheInvalidate('inventory_');
-        cacheInvalidate('moto_');
-        sessionInvalidate('inventory_');
+        invalidateAllCaches();
+        cacheInvalidate(`moto_id_${id}`);
 
         try {
             const updates: any = {};
@@ -664,33 +690,33 @@ export const inventoryService = {
                 updates.slug = generateMotoSlug(moto.make, moto.model, moto.year);
             }
 
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('motorcycles')
                 .update(updates)
-                .eq('id', id);
+                .eq('id', id)
+                .select();
 
             if (error) {
-                console.error('Error updating motorcycle:', error);
-                throw error;
+                throw new Error('Erro ao atualizar moto. Faça login novamente.');
+            }
+            if (!data || data.length === 0) {
+                throw new Error('Moto não foi atualizada. Faça login novamente.');
             }
         } catch (err) {
-            console.error('Unexpected error in updateMotorcycle:', err);
+            console.error('updateMotorcycle error:', err);
             throw err;
         }
     },
 
     deleteMotorcycle: async (id: string | number) => {
-        if (!supabase) return;
-        // Invalidate ALL caches aggressively
-        cacheInvalidate('inventory_');
-        cacheInvalidate('moto_');
+        await ensureAuth();
+        if (!supabase) throw new Error('Conexão indisponível.');
+        invalidateAllCaches();
         cacheInvalidate(`moto_id_${id}`);
-        sessionInvalidate('inventory_');
-        sessionInvalidate('moto_');
         const { data, error } = await supabase.from('motorcycles').delete().eq('id', id).select();
-        if (error) throw error;
+        if (error) throw new Error('Erro ao remover moto. Faça login novamente.');
         if (!data || data.length === 0) {
-            throw new Error('Não foi possível remover. Faça login novamente e tente de novo.');
+            throw new Error('Não foi possível remover. Faça login novamente.');
         }
     },
 
