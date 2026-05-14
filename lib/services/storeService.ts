@@ -681,12 +681,17 @@ export const inventoryService = {
 
     deleteMotorcycle: async (id: string | number) => {
         if (!supabase) return;
-        // Invalidate caches
+        // Invalidate ALL caches aggressively
         cacheInvalidate('inventory_');
         cacheInvalidate('moto_');
+        cacheInvalidate(`moto_id_${id}`);
         sessionInvalidate('inventory_');
-        const { error } = await supabase.from('motorcycles').delete().eq('id', id);
+        sessionInvalidate('moto_');
+        const { data, error } = await supabase.from('motorcycles').delete().eq('id', id).select();
         if (error) throw error;
+        if (!data || data.length === 0) {
+            throw new Error('Não foi possível remover. Faça login novamente e tente de novo.');
+        }
     },
 
     getStats: async (storeSlug: string) => {
